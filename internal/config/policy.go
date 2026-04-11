@@ -27,18 +27,26 @@ type Policy struct {
 }
 
 // Load reads and validates a Policy from a YAML file.
-func Load(path string) (*Policy, error) {
+func Load(path string) (p *Policy, err error) {
 	root, err := os.OpenRoot(".")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open root directory: %w", err)
 	}
-	defer root.Close()
+	defer func() {
+		if cerr := root.Close(); cerr != nil && err == nil {
+			err = fmt.Errorf("failed to close root directory: %w", cerr)
+		}
+	}()
 
 	file, err := root.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open policy file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil && err == nil {
+			err = fmt.Errorf("failed to close policy file: %w", cerr)
+		}
+	}()
 
 	var policy Policy
 	if err := yaml.NewDecoder(file).Decode(&policy); err != nil {
