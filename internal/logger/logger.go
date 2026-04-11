@@ -12,12 +12,12 @@ import (
 // to close the log file.
 func Init() (func(), error) {
 	// make sure directory exists
-	if err := os.MkdirAll("logs", 0755); err != nil {
+	if err := os.MkdirAll("logs", 0750); err != nil {
 		return nil, fmt.Errorf("failed to create logs directory: %w", err)
 	}
 
 	// open log file
-	logFile, err := os.OpenFile("logs/all.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile("logs/all.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -30,6 +30,8 @@ func Init() (func(), error) {
 	slog.SetDefault(l)
 
 	return func() {
-		logFile.Close()
+		if err := logFile.Close(); err != nil {
+			fmt.Printf("failed to close log file: %v\n", err)
+		}
 	}, nil
 }

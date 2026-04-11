@@ -102,7 +102,7 @@ interval: 10x
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpfile, err := os.CreateTemp("", "policy-*.yaml")
+			tmpfile, err := os.CreateTemp(".", "policy-*.yaml")
 			if err != nil {
 				t.Fatal(err)
 			}
