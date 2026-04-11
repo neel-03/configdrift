@@ -1,8 +1,10 @@
 name: Security
 
 on:
+  push:
+    branches: [main, development]
   pull_request:
-    branches: [development]
+    branches: [main, development]
 
 jobs:
   gosec:
