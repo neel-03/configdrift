@@ -1,0 +1,5 @@
+canonical:
+  type: local
+  path: ./config.yaml
+
+interval: 20s
