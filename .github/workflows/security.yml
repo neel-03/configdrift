@@ -30,6 +30,6 @@ jobs:
         with:
           go-version-file: "go.mod"
       - name: Run gosec
-        uses: securego/gosec@v2
+        uses: securego/gosec@master
         with:
           args: ./...
