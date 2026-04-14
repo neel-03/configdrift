@@ -2,9 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [main, development]
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '**.pdf'
+      - 'docs/**'
   pull_request:
-    branches: [main, development]
+    branches:
+      - main
+      - development
+    paths-ignore:
+      - '**.md'
+      - '**.pdf'
+      - 'docs/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci:
@@ -15,16 +30,13 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version-file: "go.mod"
 
       - name: Download dependencies
         run: go mod tidy
 
       - name: Build
         run: go build ./...
-
-      - name: Vet
-        run: go vet ./...
 
       - name: Lint
         uses: golangci/golangci-lint-action@v6
