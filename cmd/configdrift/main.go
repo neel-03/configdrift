@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/neel-03/configdrift/internal/config"
 	"github.com/neel-03/configdrift/internal/logger"
+	"github.com/neel-03/configdrift/internal/source"
 )
 
 func main() {
@@ -27,4 +30,29 @@ func main() {
 	}
 
 	slog.Info("config loaded", "config", cfg)
+
+	// create and fetch data from local config
+	var src source.Source
+
+	switch cfg.Canonical.Type {
+	case config.TypeLocal:
+		src = source.NewLocalSource(cfg.Canonical.Path)
+	default:
+		slog.Error("unsupported source type", "type", cfg.Canonical.Type)
+		os.Exit(1)
+	}
+
+	// create a context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// fetch data from source
+	data, err := src.Fetch(ctx)
+	if err != nil {
+		slog.Error("failed to fetch data", "error", err)
+		os.Exit(1)
+	}
+
+	slog.Info("data fetched", "data", string(data))
+
 }
