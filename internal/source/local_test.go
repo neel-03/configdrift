@@ -95,7 +95,9 @@ func TestLocalSource(t *testing.T) {
 		tmpDir := t.TempDir()
 		path := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("concurrent data")
-		os.WriteFile(path, content, 0644)
+		if err := os.WriteFile(path, content, 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		src := NewLocalSource(path)
 		var wg sync.WaitGroup
@@ -118,16 +120,24 @@ func TestLocalSource(t *testing.T) {
 		tmpDir := t.TempDir()
 		path := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("original")
-		os.WriteFile(path, content, 0644)
+		if err := os.WriteFile(path, content, 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		src := NewLocalSource(path)
 
 		// Fetch and modify the slice
-		data1, _ := src.Fetch(context.Background())
+		data1, err := src.Fetch(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
 		data1[0] = 'X'
 
 		// Fetch again - should still be original
-		data2, _ := src.Fetch(context.Background())
+		data2, err := src.Fetch(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
 		if string(data2) != "original" {
 			t.Errorf("internal cache was mutated! expected 'original', got %s", data2)
 		}
@@ -136,7 +146,9 @@ func TestLocalSource(t *testing.T) {
 	t.Run("EmptyFile", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		path := filepath.Join(tmpDir, "empty.yaml")
-		os.WriteFile(path, []byte(""), 0644)
+		if err := os.WriteFile(path, []byte(""), 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		src := NewLocalSource(path)
 		data, err := src.Fetch(context.Background())
