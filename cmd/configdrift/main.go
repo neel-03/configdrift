@@ -37,6 +37,12 @@ func main() {
 	switch cfg.Canonical.Type {
 	case config.TypeLocal:
 		src = source.NewLocalSource(cfg.Canonical.Path)
+	case config.TypeGit:
+		src = source.NewGitSource(
+			cfg.Canonical.Repo,
+			cfg.Canonical.Branch,
+			cfg.Canonical.Path,
+		)
 	default:
 		slog.Error("unsupported source type", "type", cfg.Canonical.Type)
 		os.Exit(1)

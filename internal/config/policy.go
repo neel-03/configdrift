@@ -11,13 +11,16 @@ import (
 
 // Supported canonical types
 const (
+	TypeGit   = "git"
 	TypeLocal = "local"
 )
 
 // CanonicalConfig represents the source of truth configuration.
 type CanonicalConfig struct {
-	Type string `yaml:"type" validate:"required,oneof=local"`
-	Path string `yaml:"path" validate:"required"`
+	Type   string `yaml:"type" validate:"required,oneof=git local"`
+	Path   string `yaml:"path" validate:"required"`
+	Repo   string `yaml:"repo" validate:"required_if=Type git"`
+	Branch string `yaml:"branch" validate:"required_if=Type git"`
 }
 
 // Policy defines the drift detection settings.
