@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -50,10 +51,21 @@ func (gs *GitSource) Fetch(ctx context.Context) ([]byte, error) {
 	}
 
 	// read the file
-	fullPath := filepath.Join(gs.dir, gs.file)
-	data, err := os.ReadFile(fullPath)
+	root, err := os.OpenRoot(gs.dir)
 	if err != nil {
-		return nil, fmt.Errorf("read git source file %s: %w", fullPath, err)
+		return nil, fmt.Errorf("open root %s: %w", gs.dir, err)
+	}
+	defer root.Close()
+
+	f, err := root.Open(gs.file)
+	if err != nil {
+		return nil, fmt.Errorf("open git source file %s: %w", gs.file, err)
+	}
+	defer f.Close()
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return nil, fmt.Errorf("read git source file %s: %w", gs.file, err)
 	}
 
 	return data, nil
