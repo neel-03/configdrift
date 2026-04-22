@@ -14,15 +14,19 @@ import (
 const (
 	TypeGit   = "git"
 	TypeLocal = "local"
+	TypeS3    = "s3"
 )
 
 // CanonicalConfig represents the source of truth configuration.
 type CanonicalConfig struct {
-	Type      string `yaml:"type" validate:"required,oneof=git local"`
-	Path      string `yaml:"path" validate:"required"`
+	Type      string `yaml:"type" validate:"required,oneof=git local s3"`
+	Path      string `yaml:"path" validate:"required_if=Type local,required_if=Type git"`
 	Repo      string `yaml:"repo" validate:"required_if=Type git"`
 	Branch    string `yaml:"branch" validate:"required_if=Type git"`
 	AuthToken string `yaml:"auth_token" validate:"omitempty,required_if=Type git"`
+	S3Bucket  string `yaml:"bucket" validate:"required_if=Type s3"`
+	S3Region  string `yaml:"region" validate:"required_if=Type s3"`
+	S3Key     string `yaml:"key" validate:"required_if=Type s3"`
 }
 
 // Policy defines the drift detection settings.
