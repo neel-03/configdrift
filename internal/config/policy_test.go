@@ -98,7 +98,83 @@ interval: 10x
 			yaml:    ``,
 			wantErr: true,
 		},
+		{
+			name: "valid git policy without token (empty string)",
+			yaml: `
+canonical:
+  type: git
+  repo: https://github.com/user/repo
+  branch: main
+  path: config.yaml
+  auth_token: ""
+interval: 1m
+`,
+			wantErr: false,
+		},
+		{
+			name: "valid git policy without token (field missing)",
+			yaml: `
+canonical:
+  type: git
+  repo: https://github.com/user/repo
+  branch: main
+  path: config.yaml
+interval: 1m
+`,
+			wantErr: false,
+		},
+		{
+			name: "valid git policy with token",
+			yaml: `
+canonical:
+  type: git
+  repo: https://github.com/user/repo
+  branch: main
+  path: config.yaml
+  auth_token: my-secret-token
+interval: 1m
+`,
+			wantErr: false,
+		},
+		{
+			name: "git policy with env var token",
+			yaml: `
+canonical:
+  type: git
+  repo: https://github.com/user/repo
+  branch: main
+  path: config.yaml
+  auth_token: ${TEST_TOKEN}
+interval: 1m
+`,
+			wantErr: false,
+		},
+		{
+			name: "git policy missing repo",
+			yaml: `
+canonical:
+  type: git
+  branch: main
+  path: config.yaml
+interval: 1m
+`,
+			wantErr: true,
+		},
+		{
+			name: "git policy missing branch",
+			yaml: `
+canonical:
+  type: git
+  repo: https://github.com/user/repo
+  path: config.yaml
+interval: 1m
+`,
+			wantErr: true,
+		},
 	}
+
+	os.Setenv("TEST_TOKEN", "env-secret-token")
+	defer os.Unsetenv("TEST_TOKEN")
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
