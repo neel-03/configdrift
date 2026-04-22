@@ -50,6 +50,17 @@ func main() {
 			cfg.Canonical.Path,
 			cfg.Canonical.AuthToken,
 		)
+	case config.TypeS3:
+		src, err = source.NewS3Source(
+			context.Background(),
+			cfg.Canonical.S3Bucket,
+			cfg.Canonical.S3Key,
+			cfg.Canonical.S3Region,
+		)
+		if err != nil {
+			slog.Error("failed to init s3 source", "error", err)
+			os.Exit(1)
+		}
 	default:
 		slog.Error("unsupported source type", "type", cfg.Canonical.Type)
 		os.Exit(1)

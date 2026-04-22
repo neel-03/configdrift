@@ -6,10 +6,17 @@ canonical:
 
   # for source = Git
   # ==========
-  type: git
-  repo: https://github.com/neel-03/configdrift.git
-  branch: test/remote_config
-  path: config.yaml
-  auth_token: $GITHUB_ACCESS_TOKEN
+  # type: git
+  # repo: https://github.com/neel-03/configdrift.git
+  # branch: test/remote_config
+  # path: config.yaml
+  # auth_token: $GITHUB_ACCESS_TOKEN
+
+  # for source = S3
+  # ==========
+  type: s3
+  bucket: $CONFIGDRIFT_S3_BUCKET_NAME
+  key: $CONFIGDRIFT_S3_OBJECT_URI
+  region: $AWS_REGION
 
 interval: 20s
