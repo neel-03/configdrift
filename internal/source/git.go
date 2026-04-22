@@ -95,12 +95,25 @@ func buildCacheDir(repo, branch string) string {
 }
 
 func (gs *GitSource) ensureRepo() (*git.Repository, error) {
-	if _, err := os.Stat(gs.dir); os.IsNotExist(err) {
-		// if repo doesn't exist locally, clone it
-		return gs.clone()
+	repo, err := git.PlainOpen(gs.dir)
+	if err == nil {
+		// if repo exists, pull latest changes
+		return gs.pull(repo)
 	}
-	// if repo exists, pull latest changes
-	return gs.pull()
+
+	if err != git.ErrRepositoryNotExists {
+		return nil, fmt.Errorf("open repo: %w", err)
+	}
+
+	// repository doesn't exist locally (or dir is empty/not a repo), clone it
+	// if the directory exists but is not a valid repo, remove it first
+	if _, statErr := os.Stat(gs.dir); statErr == nil {
+		if removeErr := os.RemoveAll(gs.dir); removeErr != nil {
+			return nil, fmt.Errorf("cleanup non-repo dir: %w", removeErr)
+		}
+	}
+
+	return gs.clone()
 }
 
 // clone the repo if it doesn't exist locally
@@ -133,12 +146,7 @@ func (gs *GitSource) clone() (*git.Repository, error) {
 }
 
 // pull latest changes from remote repo
-func (gs *GitSource) pull() (*git.Repository, error) {
-	repo, err := git.PlainOpen(gs.dir)
-	if err != nil {
-		return nil, fmt.Errorf("open repo: %w", err)
-	}
-
+func (gs *GitSource) pull(repo *git.Repository) (*git.Repository, error) {
 	tree, err := repo.Worktree()
 	if err != nil {
 		return nil, fmt.Errorf("get worktree: %w", err)

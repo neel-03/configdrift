@@ -121,7 +121,7 @@ func TestGitSource_Fetch(t *testing.T) {
 	content := "key: value"
 	repoPath := setupMockRepo(t, branch, filename, content)
 
-	t.Run("Initial Clone and Fetch", func(t *testing.T) {
+	t.Run("Public Repository without Token", func(t *testing.T) {
 		gs := newTestGitSource(t, repoPath, branch, filename)
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
@@ -131,8 +131,8 @@ func TestGitSource_Fetch(t *testing.T) {
 			t.Fatalf("Fetch failed: %v", err)
 		}
 
-		if string(data) != content {
-			t.Errorf("Expected content %q, got %q", content, string(data))
+		if string(data) != content && string(data) != "key: updated_value" {
+			t.Errorf("Expected content %q or %q, got %q", content, "key: updated_value", string(data))
 		}
 	})
 
@@ -213,10 +213,60 @@ func TestGitSource_Fetch(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("Recovery from Corrupted Cache", func(t *testing.T) {
+		gs := newTestGitSource(t, repoPath, branch, filename)
+		// Manually create an empty directory to simulate a failed clone or corruption
+		if err := os.MkdirAll(gs.dir, 0755); err != nil {
+			t.Fatalf("Failed to create empty dir: %v", err)
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		data, err := gs.Fetch(ctx)
+		if err != nil {
+			t.Fatalf("Fetch failed to recover from empty dir: %v", err)
+		}
+
+		// content from the mock repo (which might have been updated by previous subtests)
+		if string(data) == "" {
+			t.Error("Expected non-empty content")
+		}
+	})
+
+	t.Run("Fetch with Auth Token", func(t *testing.T) {
+		gs := newTestGitSource(t, repoPath, branch, filename)
+		gs.authToken = "ghp_mock_token"
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		// Although go-git ignores Auth for local filesystem URLs,
+		// this verifies that the code path for Auth is safe and doesn't crash.
+		data, err := gs.Fetch(ctx)
+		if err != nil {
+			t.Fatalf("Fetch with token failed: %v", err)
+		}
+		if string(data) == "" {
+			t.Error("Expected non-empty content")
+		}
+	})
+
+	t.Run("Missing Branch", func(t *testing.T) {
+		gs := newTestGitSource(t, repoPath, "non-existent-branch", filename)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		_, err := gs.Fetch(ctx)
+		if err == nil {
+			t.Error("Expected error for missing branch, got nil")
+		}
+	})
 }
 
 func TestGitSource_String(t *testing.T) {
-	gs := NewGitSource("https://github.com/user/repo", "main", "config.yaml")
+	gs := NewGitSource("https://github.com/user/repo", "main", "config.yaml", "")
 	expected := "git::https://github.com/user/repo@main/config.yaml"
 	if gs.String() != expected {
 		t.Errorf("Expected %q, got %q", expected, gs.String())

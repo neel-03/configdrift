@@ -29,7 +29,7 @@ func main() {
 
 	slog.Info("Configdrift starting")
 
-	cfg, err := config.Load("./targets.yaml")
+	cfg, err := config.Load("./source.yaml")
 	if err != nil {
 		slog.Error("failed to load config", "error", err)
 		os.Exit(1)
