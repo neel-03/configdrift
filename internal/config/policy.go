@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -17,10 +18,11 @@ const (
 
 // CanonicalConfig represents the source of truth configuration.
 type CanonicalConfig struct {
-	Type   string `yaml:"type" validate:"required,oneof=git local"`
-	Path   string `yaml:"path" validate:"required"`
-	Repo   string `yaml:"repo" validate:"required_if=Type git"`
-	Branch string `yaml:"branch" validate:"required_if=Type git"`
+	Type      string `yaml:"type" validate:"required,oneof=git local"`
+	Path      string `yaml:"path" validate:"required"`
+	Repo      string `yaml:"repo" validate:"required_if=Type git"`
+	Branch    string `yaml:"branch" validate:"required_if=Type git"`
+	AuthToken string `yaml:"auth_token" validate:"omitempty,required_if=Type git"`
 }
 
 // Policy defines the drift detection settings.
@@ -51,8 +53,16 @@ func Load(path string) (p *Policy, err error) {
 		}
 	}()
 
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read policy file: %w", err)
+	}
+
+	// expand environment variables
+	expanded := os.ExpandEnv(string(data))
+
 	var policy Policy
-	if err := yaml.NewDecoder(file).Decode(&policy); err != nil {
+	if err := yaml.Unmarshal([]byte(expanded), &policy); err != nil {
 		return nil, fmt.Errorf("failed to decode policy YAML: %w", err)
 	}
 

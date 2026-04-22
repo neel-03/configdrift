@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/neel-03/configdrift/internal/config"
 	"github.com/neel-03/configdrift/internal/logger"
 	"github.com/neel-03/configdrift/internal/source"
@@ -20,6 +21,11 @@ func main() {
 		os.Exit(1)
 	}
 	defer closeLogger()
+
+	// load .env file if it exists
+	if err := godotenv.Load(); err != nil {
+		slog.Error("Error loading .env file", "error", err)
+	}
 
 	slog.Info("Configdrift starting")
 
@@ -42,6 +48,7 @@ func main() {
 			cfg.Canonical.Repo,
 			cfg.Canonical.Branch,
 			cfg.Canonical.Path,
+			cfg.Canonical.AuthToken,
 		)
 	default:
 		slog.Error("unsupported source type", "type", cfg.Canonical.Type)

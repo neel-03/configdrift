@@ -4,12 +4,12 @@ canonical:
   # type: local
   # path: ./config.yaml
 
-
   # for source = Git
   # ==========
   type: git
-  repo: https://github.com/githubtraining/introduction-to-github.git
-  branch: main
-  path: config.yml
+  repo: https://github.com/neel-03/configdrift.git
+  branch: test/remote_config
+  path: config.yaml
+  auth_token: $GITHUB_ACCESS_TOKEN
 
 interval: 20s

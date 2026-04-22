@@ -11,26 +11,29 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
 // GitSource fetches the canonical config from a remote git repository.
 type GitSource struct {
-	repoURL string
-	branch  string
-	file    string
-	dir     string // local cache directory
-	mu      sync.Mutex
+	repoURL   string
+	branch    string
+	file      string
+	dir       string // local cache directory
+	authToken string
+	mu        sync.Mutex
 }
 
 // NewGitSource creates a new git source.
-func NewGitSource(repo, branch, file string) *GitSource {
+func NewGitSource(repo, branch, file, authToken string) *GitSource {
 	cacheDir := buildCacheDir(repo, branch)
 
 	return &GitSource{
-		repoURL: repo,
-		branch:  branch,
-		file:    file,
-		dir:     cacheDir,
+		repoURL:   repo,
+		branch:    branch,
+		file:      file,
+		dir:       cacheDir,
+		authToken: authToken,
 	}
 }
 
@@ -106,15 +109,21 @@ func (gs *GitSource) clone() (*git.Repository, error) {
 		return nil, fmt.Errorf("create repo dir: %w", err)
 	}
 
+	opts := &git.CloneOptions{
+		URL:           gs.repoURL,
+		ReferenceName: plumbing.NewBranchReferenceName(gs.branch),
+		SingleBranch:  true,
+		Depth:         1,
+	}
+
+	if gs.authToken != "" {
+		opts.Auth = gs.getAuth()
+	}
+
 	repo, err := git.PlainClone(
 		gs.dir,
 		false,
-		&git.CloneOptions{
-			URL:           gs.repoURL,
-			ReferenceName: plumbing.NewBranchReferenceName(gs.branch),
-			SingleBranch:  true,
-			Depth:         1,
-		},
+		opts,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("clone repo: %w", err)
@@ -135,9 +144,15 @@ func (gs *GitSource) pull() (*git.Repository, error) {
 		return nil, fmt.Errorf("get worktree: %w", err)
 	}
 
-	err = tree.Pull(&git.PullOptions{
-		RemoteName: "origin",
-	})
+	opts := &git.PullOptions{
+		RemoteName:    "origin",
+		ReferenceName: plumbing.NewBranchReferenceName(gs.branch),
+	}
+	if gs.authToken != "" {
+		opts.Auth = gs.getAuth()
+	}
+
+	err = tree.Pull(opts)
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		// If pull fails (e.g. history diverged), we could potentially
 		// delete and re-clone, but for now we report it as an error.
@@ -145,4 +160,12 @@ func (gs *GitSource) pull() (*git.Repository, error) {
 	}
 
 	return repo, nil
+}
+
+// getAuth returns the HTTP BasicAuth for git operations if auth token is provided.
+func (gs *GitSource) getAuth() *http.BasicAuth {
+	return &http.BasicAuth{
+		Username: "x-token",
+		Password: gs.authToken,
+	}
 }
