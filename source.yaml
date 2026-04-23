@@ -16,7 +16,7 @@ canonical:
   # ==========
   type: s3
   bucket: $CONFIGDRIFT_S3_BUCKET_NAME
-  key: $CONFIGDRIFT_S3_OBJECT_URI
+  path: $CONFIGDRIFT_S3_OBJECT_URI
   region: $AWS_REGION
 
 interval: 20s
