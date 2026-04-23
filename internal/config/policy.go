@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"gopkg.in/yaml.v3"
+	"github.com/neel-03/configdrift/internal/utils"
 )
 
 // Supported canonical types
@@ -20,13 +20,12 @@ const (
 // CanonicalConfig represents the source of truth configuration.
 type CanonicalConfig struct {
 	Type      string `yaml:"type" validate:"required,oneof=git local s3"`
-	Path      string `yaml:"path" validate:"required_if=Type local,required_if=Type git"`
+	Path      string `yaml:"path" validate:"required"`
 	Repo      string `yaml:"repo" validate:"required_if=Type git"`
 	Branch    string `yaml:"branch" validate:"required_if=Type git"`
 	AuthToken string `yaml:"auth_token" validate:"omitempty,required_if=Type git"`
 	S3Bucket  string `yaml:"bucket" validate:"required_if=Type s3"`
 	S3Region  string `yaml:"region" validate:"required_if=Type s3"`
-	S3Key     string `yaml:"key" validate:"required_if=Type s3"`
 }
 
 // Policy defines the drift detection settings.
@@ -66,7 +65,7 @@ func Load(path string) (p *Policy, err error) {
 	expanded := os.ExpandEnv(string(data))
 
 	var policy Policy
-	if err := yaml.Unmarshal([]byte(expanded), &policy); err != nil {
+	if err := utils.ParseYaml([]byte(expanded), &policy); err != nil {
 		return nil, fmt.Errorf("failed to decode policy YAML: %w", err)
 	}
 

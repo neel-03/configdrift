@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/neel-03/configdrift/internal/config"
 	"github.com/neel-03/configdrift/internal/logger"
+	"github.com/neel-03/configdrift/internal/parser"
 	"github.com/neel-03/configdrift/internal/source"
 )
 
@@ -54,7 +55,7 @@ func main() {
 		src, err = source.NewS3Source(
 			context.Background(),
 			cfg.Canonical.S3Bucket,
-			cfg.Canonical.S3Key,
+			cfg.Canonical.Path,
 			cfg.Canonical.S3Region,
 		)
 		if err != nil {
@@ -77,6 +78,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	slog.Info("data fetched", "data", string(data))
+	// create parser and parse the data
+	p, err := parser.FromPath(cfg.Canonical.Path)
+	if err != nil {
+		slog.Error("failed to create parser", "error", err)
+		os.Exit(1)
+	}
 
+	parsed, err := p.Parse(data)
+	if err != nil {
+		slog.Error("failed to parse data", "error", err)
+		os.Exit(1)
+	}
+
+	slog.Info("parsed config", "config", parsed)
 }
