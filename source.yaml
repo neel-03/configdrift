@@ -2,7 +2,9 @@ canonical:
   # for source = Local
   # ==========
   # type: local
-  # path: ./config.yaml
+  # path: ./config/local-config.yaml
+  # --- OR ---
+  # path: ./config/local-config.toml
 
   # for source = Git
   # ==========
@@ -11,12 +13,18 @@ canonical:
   # branch: test/remote_config
   # path: config.yaml
   # auth_token: $GITHUB_ACCESS_TOKEN
+  # --- OR ---
+  # repo: [any_git_repo]
+  # branch: master
+  # path: examples/example.toml
 
   # for source = S3
   # ==========
   type: s3
   bucket: $CONFIGDRIFT_S3_BUCKET_NAME
-  path: $CONFIGDRIFT_S3_OBJECT_URI
   region: $AWS_REGION
+  # path: config/s3-config.yaml
+  # --- OR ---
+  path: config/s3-config.toml
 
 interval: 20s

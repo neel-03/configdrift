@@ -1,0 +1,16 @@
+title = "Sample TOML Config"
+
+allowed_origins = ["<IP_ADDRESS>", "<IP_ADDRESS>"]
+timeouts = { read_sec = 5, write_sec = 10.5 }
+
+[db]
+host = "localhost"
+port = 3306
+
+[db.credentials]
+user = "root"
+password = "you'll_never_guess_the_password"
+
+[logging]
+level = "info"
+outputs = ["stdout", "file"]
