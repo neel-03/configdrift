@@ -9,6 +9,7 @@ import (
 const (
 	YAMLExt = ".yaml"
 	YMLExt  = ".yml"
+	TOMLext = ".toml"
 )
 
 // Parser converts raw bytes into structured map
@@ -26,6 +27,8 @@ func FromPath(path string) (Parser, error) {
 	switch ext {
 	case YAMLExt, YMLExt:
 		return NewYAMLParser(), nil
+	case TOMLext:
+		return NewTOMLParser(), nil
 	default:
 		return nil, fmt.Errorf("unsupported file type: %s", ext)
 	}
