@@ -10,6 +10,7 @@ const (
 	YAMLExt = ".yaml"
 	YMLExt  = ".yml"
 	TOMLext = ".toml"
+	EnvExt  = ".env"
 )
 
 // Parser converts raw bytes into structured map
@@ -29,6 +30,8 @@ func FromPath(path string) (Parser, error) {
 		return NewYAMLParser(), nil
 	case TOMLext:
 		return NewTOMLParser(), nil
+	case EnvExt:
+		return NewEnvParser(), nil
 	default:
 		return nil, fmt.Errorf("unsupported file type: %s", ext)
 	}
