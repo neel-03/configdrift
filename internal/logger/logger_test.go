@@ -80,14 +80,20 @@ func TestInit_CreateDirFailure(t *testing.T) {
 	if err := os.WriteFile(logDir, []byte("not a dir"), 0644); err != nil {
 		t.Fatalf("Failed to create blocker file: %v", err)
 	}
-	defer os.Remove(logDir)
+	defer func() {
+		_ = os.Remove(logDir)
+	}()
 
 	// Since logger.Init is hardcoded to "logs", we need to run it in a temp dir or similar
 	// But Init uses relative path "logs". We can change the working directory.
 	oldWd, _ := os.Getwd()
 	tmpDir := t.TempDir()
-	os.Chdir(tmpDir)
-	defer os.Chdir(oldWd)
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(oldWd)
+	}()
 
 	// Create a blocker file in the temp dir
 	if err := os.WriteFile("logs", []byte("not a dir"), 0644); err != nil {
@@ -103,14 +109,20 @@ func TestInit_CreateDirFailure(t *testing.T) {
 func TestInit_OpenFileFailure(t *testing.T) {
 	oldWd, _ := os.Getwd()
 	tmpDir := t.TempDir()
-	os.Chdir(tmpDir)
-	defer os.Chdir(oldWd)
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(oldWd)
+	}()
 
 	// create 'logs' directory and make it non-writable/non-accessible
 	if err := os.Mkdir("logs", 0000); err != nil {
 		t.Fatalf("Failed to create logs dir: %v", err)
 	}
-	defer os.Chmod("logs", 0755) // restore to allow cleanup
+	defer func() {
+		_ = os.Chmod("logs", 0755)
+	}() // restore to allow cleanup
 
 	_, err := Init()
 	if err == nil {
@@ -126,8 +138,12 @@ func TestCleanup_CloseError(t *testing.T) {
 	
 	oldWd, _ := os.Getwd()
 	tmpDir := t.TempDir()
-	os.Chdir(tmpDir)
-	defer os.Chdir(oldWd)
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(oldWd)
+	}()
 
 	cleanup, err := Init()
 	if err != nil {

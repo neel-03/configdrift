@@ -217,10 +217,16 @@ interval: ${INVALID_INTERVAL}
 		},
 	}
 
-	os.Setenv("TEST_TOKEN", "env-secret-token")
-	os.Setenv("INVALID_INTERVAL", "abc")
-	defer os.Unsetenv("TEST_TOKEN")
-	defer os.Unsetenv("INVALID_INTERVAL")
+	if err := os.Setenv("TEST_TOKEN", "env-secret-token"); err != nil {
+		t.Fatalf("Failed to set env: %v", err)
+	}
+	if err := os.Setenv("INVALID_INTERVAL", "abc"); err != nil {
+		t.Fatalf("Failed to set env: %v", err)
+	}
+	defer func() {
+		_ = os.Unsetenv("TEST_TOKEN")
+		_ = os.Unsetenv("INVALID_INTERVAL")
+	}()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -266,9 +272,13 @@ interval: ${INVALID_INTERVAL}
 		// Make it a directory to cause Open or Read failure if OpenRoot was used differently, 
 		// but here we can just use permissions or remove it right after open.
 		// Actually, the easiest way to cause ReadAll failure is to use a directory path as a file.
-		os.Remove(name)
-		os.Mkdir(name, 0755)
-		defer os.RemoveAll(name)
+		_ = os.Remove(name)
+		if err := os.Mkdir(name, 0755); err != nil {
+			t.Fatalf("Failed to create directory: %v", err)
+		}
+		defer func() {
+			_ = os.RemoveAll(name)
+		}()
 
 		_, err = Load(name)
 		if err == nil {

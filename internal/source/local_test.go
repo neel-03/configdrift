@@ -166,7 +166,9 @@ func TestLocalSource(t *testing.T) {
 		if err := os.Mkdir(path, 0000); err != nil {
 			t.Fatal(err)
 		}
-		defer os.Chmod(path, 0755)
+		defer func() {
+			_ = os.Chmod(path, 0755)
+		}()
 
 		src := NewLocalSource(path)
 		_, err := src.Fetch(context.Background())
