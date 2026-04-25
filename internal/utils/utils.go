@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/toml"
+	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
 
@@ -21,4 +22,24 @@ func ParseToml(data []byte, target interface{}) error {
 		return fmt.Errorf("toml parse failed: %w", err)
 	}
 	return nil
+}
+
+// ParseEnv parses .env style data into the provided target map
+func ParseEnv(data []byte, target interface{}) error {
+	envMap, err := godotenv.Unmarshal(string(data))
+	if err != nil {
+		return fmt.Errorf("env parse failed: %w", err)
+	}
+
+	if m, ok := target.(*map[string]interface{}); ok {
+		if *m == nil {
+			*m = make(map[string]interface{})
+		}
+		for k, v := range envMap {
+			(*m)[k] = v
+		}
+		return nil
+	}
+
+	return fmt.Errorf("unsupported target type for env parsing: %T", target)
 }

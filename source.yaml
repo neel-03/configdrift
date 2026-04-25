@@ -5,6 +5,8 @@ canonical:
   # path: ./config/local-config.yaml
   # --- OR ---
   # path: ./config/local-config.toml
+  # --- OR ---
+  # path: ./config/local.env
 
   # for source = Git
   # ==========
@@ -17,6 +19,8 @@ canonical:
   # repo: [any_git_repo]
   # branch: master
   # path: examples/example.toml
+  # --- OR ---
+  # path: .env.example
 
   # for source = S3
   # ==========
@@ -25,6 +29,8 @@ canonical:
   region: $AWS_REGION
   # path: config/s3-config.yaml
   # --- OR ---
-  path: config/s3-config.toml
+  # path: config/s3-config.toml
+  # --- OR ---
+  path: config/s3.env
 
 interval: 20s
