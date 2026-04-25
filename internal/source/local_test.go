@@ -160,6 +160,37 @@ func TestLocalSource(t *testing.T) {
 		}
 	})
 
+	t.Run("StatError", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		path := filepath.Join(tmpDir, "inaccessible")
+		if err := os.Mkdir(path, 0000); err != nil {
+			t.Fatal(err)
+		}
+		defer func() {
+			_ = os.Chmod(path, 0755)
+		}()
+
+		src := NewLocalSource(path)
+		_, err := src.Fetch(context.Background())
+		if err == nil {
+			t.Error("expected error for inaccessible path, got nil")
+		}
+	})
+
+	t.Run("ReadError", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		path := filepath.Join(tmpDir, "directory_as_file")
+		if err := os.Mkdir(path, 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		src := NewLocalSource(path)
+		_, err := src.Fetch(context.Background())
+		if err == nil {
+			t.Error("expected error for directory-as-file, got nil")
+		}
+	})
+
 	t.Run("StringMethod", func(t *testing.T) {
 		path := "/tmp/test.yaml"
 		src := NewLocalSource(path)

@@ -171,10 +171,62 @@ interval: 1m
 `,
 			wantErr: true,
 		},
+		{
+			name: "valid s3 policy",
+			yaml: `
+canonical:
+  type: s3
+  bucket: my-bucket
+  region: us-east-1
+  path: config.yaml
+interval: 1m
+`,
+			wantErr: false,
+		},
+		{
+			name: "s3 policy missing bucket",
+			yaml: `
+canonical:
+  type: s3
+  region: us-east-1
+  path: config.yaml
+interval: 1m
+`,
+			wantErr: true,
+		},
+		{
+			name: "s3 policy missing region",
+			yaml: `
+canonical:
+  type: s3
+  bucket: my-bucket
+  path: config.yaml
+interval: 1m
+`,
+			wantErr: true,
+		},
+		{
+			name: "invalid duration in env var",
+			yaml: `
+canonical:
+  type: local
+  path: ./config.yaml
+interval: ${INVALID_INTERVAL}
+`,
+			wantErr: true,
+		},
 	}
 
-	os.Setenv("TEST_TOKEN", "env-secret-token")
-	defer os.Unsetenv("TEST_TOKEN")
+	if err := os.Setenv("TEST_TOKEN", "env-secret-token"); err != nil {
+		t.Fatalf("Failed to set env: %v", err)
+	}
+	if err := os.Setenv("INVALID_INTERVAL", "abc"); err != nil {
+		t.Fatalf("Failed to set env: %v", err)
+	}
+	defer func() {
+		_ = os.Unsetenv("TEST_TOKEN")
+		_ = os.Unsetenv("INVALID_INTERVAL")
+	}()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -206,6 +258,31 @@ interval: 1m
 		_, err := Load("non-existent-file.yaml")
 		if err == nil {
 			t.Errorf("Load() expected error for non-existent file, got nil")
+		}
+	})
+
+	t.Run("file read error", func(t *testing.T) {
+		tmpfile, err := os.CreateTemp(".", "unreadable-*.yaml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		name := tmpfile.Name()
+		tmpfile.Close()
+
+		// Make it a directory to cause Open or Read failure if OpenRoot was used differently, 
+		// but here we can just use permissions or remove it right after open.
+		// Actually, the easiest way to cause ReadAll failure is to use a directory path as a file.
+		_ = os.Remove(name)
+		if err := os.Mkdir(name, 0755); err != nil {
+			t.Fatalf("Failed to create directory: %v", err)
+		}
+		defer func() {
+			_ = os.RemoveAll(name)
+		}()
+
+		_, err = Load(name)
+		if err == nil {
+			t.Errorf("Load() expected error for directory-as-file, got nil")
 		}
 	})
 }
