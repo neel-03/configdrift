@@ -10,7 +10,6 @@ const (
 	YAMLExt = ".yaml"
 	YMLExt  = ".yml"
 	TOMLext = ".toml"
-	EnvExt  = ".env"
 )
 
 // Parser converts raw bytes into structured map
@@ -21,18 +20,27 @@ type Parser interface {
 }
 
 // FromPath returns a parser instance based on the file extension.
-// Allowed extensions: .yaml, .yml
+// Allowed extensions: .yaml, .yml, .toml, .env (and variations like abc.env.xyz)
 func FromPath(path string) (Parser, error) {
-	ext := strings.ToLower(filepath.Ext(path))
+	base := strings.ToLower(filepath.Base(path))
+	ext := filepath.Ext(base)
 
+	// checking for standard config extensions first
 	switch ext {
 	case YAMLExt, YMLExt:
 		return NewYAMLParser(), nil
 	case TOMLext:
 		return NewTOMLParser(), nil
-	case EnvExt:
-		return NewEnvParser(), nil
-	default:
-		return nil, fmt.Errorf("unsupported file type: %s", ext)
 	}
+	// flexible env file detection:
+	// matches if 'env' is a dot-separated component
+	// (e.g., .env, abc.env.xyz, env.pqr, my.env, env)
+	parts := strings.Split(base, ".")
+	for _, part := range parts {
+		if part == "env" {
+			return NewEnvParser(), nil
+		}
+	}
+
+	return nil, fmt.Errorf("unsupported file type: %s", filepath.Ext(path))
 }
