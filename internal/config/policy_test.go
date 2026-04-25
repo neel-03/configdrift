@@ -171,10 +171,56 @@ interval: 1m
 `,
 			wantErr: true,
 		},
+		{
+			name: "valid s3 policy",
+			yaml: `
+canonical:
+  type: s3
+  bucket: my-bucket
+  region: us-east-1
+  path: config.yaml
+interval: 1m
+`,
+			wantErr: false,
+		},
+		{
+			name: "s3 policy missing bucket",
+			yaml: `
+canonical:
+  type: s3
+  region: us-east-1
+  path: config.yaml
+interval: 1m
+`,
+			wantErr: true,
+		},
+		{
+			name: "s3 policy missing region",
+			yaml: `
+canonical:
+  type: s3
+  bucket: my-bucket
+  path: config.yaml
+interval: 1m
+`,
+			wantErr: true,
+		},
+		{
+			name: "invalid duration in env var",
+			yaml: `
+canonical:
+  type: local
+  path: ./config.yaml
+interval: ${INVALID_INTERVAL}
+`,
+			wantErr: true,
+		},
 	}
 
 	os.Setenv("TEST_TOKEN", "env-secret-token")
+	os.Setenv("INVALID_INTERVAL", "abc")
 	defer os.Unsetenv("TEST_TOKEN")
+	defer os.Unsetenv("INVALID_INTERVAL")
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -206,6 +252,27 @@ interval: 1m
 		_, err := Load("non-existent-file.yaml")
 		if err == nil {
 			t.Errorf("Load() expected error for non-existent file, got nil")
+		}
+	})
+
+	t.Run("file read error", func(t *testing.T) {
+		tmpfile, err := os.CreateTemp(".", "unreadable-*.yaml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		name := tmpfile.Name()
+		tmpfile.Close()
+
+		// Make it a directory to cause Open or Read failure if OpenRoot was used differently, 
+		// but here we can just use permissions or remove it right after open.
+		// Actually, the easiest way to cause ReadAll failure is to use a directory path as a file.
+		os.Remove(name)
+		os.Mkdir(name, 0755)
+		defer os.RemoveAll(name)
+
+		_, err = Load(name)
+		if err == nil {
+			t.Errorf("Load() expected error for directory-as-file, got nil")
 		}
 	})
 }

@@ -19,6 +19,23 @@ func (m *mockS3Client) GetObject(ctx context.Context, params *s3.GetObjectInput,
 	return m.GetObjectFunc(ctx, params, optFns...)
 }
 
+func TestNewS3Source(t *testing.T) {
+	src, err := NewS3Source(context.Background(), "bucket", "key", "us-east-1")
+	if err != nil {
+		t.Fatalf("NewS3Source failed: %v", err)
+	}
+	if src == nil {
+		t.Fatal("NewS3Source returned nil")
+	}
+}
+
+func TestS3Source_String(t *testing.T) {
+	src := &S3Source{bucket: "b", key: "k"}
+	if src.String() != "s3::b/k" {
+		t.Errorf("expected s3::b/k, got %s", src.String())
+	}
+}
+
 func TestS3Source_Fetch(t *testing.T) {
 	bucket := "test-bucket"
 	key := "config.yaml"
@@ -115,4 +132,32 @@ func TestS3Source_Fetch(t *testing.T) {
 			t.Error("Expected error, got nil")
 		}
 	})
+	t.Run("Body Read Error", func(t *testing.T) {
+		mock := &mockS3Client{
+			GetObjectFunc: func(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
+				return &s3.GetObjectOutput{
+					Body: io.NopCloser(&errorReader{err: fmt.Errorf("read error")}),
+				}, nil
+			},
+		}
+
+		s := &S3Source{
+			bucket: bucket,
+			key:    key,
+			client: mock,
+		}
+
+		_, err := s.Fetch(context.Background())
+		if err == nil {
+			t.Error("Expected error, got nil")
+		}
+	})
+}
+
+type errorReader struct {
+	err error
+}
+
+func (e *errorReader) Read(p []byte) (n int, err error) {
+	return 0, e.err
 }
