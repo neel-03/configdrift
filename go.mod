@@ -6,11 +6,11 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.16
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.100.0
-	github.com/aws/smithy-go v1.25.0
+	github.com/aws/smithy-go v1.25.1
 	github.com/go-git/go-git/v5 v5.18.0
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/joho/godotenv v1.5.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
