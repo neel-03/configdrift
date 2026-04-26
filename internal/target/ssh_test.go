@@ -61,7 +61,7 @@ func setupMockSSHServer(t *testing.T, keyData []byte) (string, func()) {
 			go func(chans <-chan ssh.NewChannel) {
 				for newChannel := range chans {
 					if newChannel.ChannelType() != "session" {
-						newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
+						_ = newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
 						continue
 					}
 					channel, requests, err := newChannel.Accept()
@@ -74,15 +74,15 @@ func setupMockSSHServer(t *testing.T, keyData []byte) (string, func()) {
 							case "exec":
 								payload := string(req.Payload[4:]) // skip length prefix
 								if payload == "cat /etc/config.yaml" {
-									channel.Write([]byte("key: value"))
-									req.Reply(true, nil)
-									channel.SendRequest("exit-status", false, []byte{0, 0, 0, 0})
+									_, _ = channel.Write([]byte("key: value"))
+									_ = req.Reply(true, nil)
+									_, _ = channel.SendRequest("exit-status", false, []byte{0, 0, 0, 0})
 									channel.Close()
 								} else {
-									req.Reply(false, nil)
+									_ = req.Reply(false, nil)
 								}
 							default:
-								req.Reply(false, nil)
+								_ = req.Reply(false, nil)
 							}
 						}
 					}(requests)
@@ -110,7 +110,8 @@ func TestSSHAdapter_Fetch(t *testing.T) {
 
 	host, portStr, _ := net.SplitHostPort(addr)
 	var port int
-	fmt.Sscanf(portStr, "%d", &port)
+	_, err = fmt.Sscanf(portStr, "%d", &port)
+	assert.NoError(t, err)
 
 	// Create known_hosts for the test server
 	signer, _ := ssh.ParsePrivateKey(keyData)
@@ -121,7 +122,8 @@ func TestSSHAdapter_Fetch(t *testing.T) {
 	
 	marshaled := ssh.MarshalAuthorizedKey(pubKey)
 	line := fmt.Sprintf("[%s]:%d %s", host, port, string(marshaled))
-	tmpKnownHosts.WriteString(line)
+	_, err = tmpKnownHosts.WriteString(line)
+	assert.NoError(t, err)
 	tmpKnownHosts.Close()
 
 	cfg := config.TargetConfig{
