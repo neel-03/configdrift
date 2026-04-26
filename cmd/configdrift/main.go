@@ -13,6 +13,7 @@ import (
 	"github.com/neel-03/configdrift/internal/logger"
 	"github.com/neel-03/configdrift/internal/parser"
 	"github.com/neel-03/configdrift/internal/source"
+	"github.com/neel-03/configdrift/internal/target"
 )
 
 func main() {
@@ -93,43 +94,59 @@ func run() error {
 	flattened := diff.Flatten(parsed)
 	slog.Info("canonical flattened config", "config", flattened)
 
-	// --- Temporary Test: comparing with Target Config ---
-	targetPath := "config/target-config.yaml"
-	targetData, err := os.ReadFile(targetPath)
-	if err != nil {
-		return fmt.Errorf("failed to read target file: %w", err)
-	}
+	// Process each target
+	for _, targetCfg := range cfg.Targets {
+		slog.Info("Checking target", "name", targetCfg.Name, "type", targetCfg.Type)
 
-	tp, err := parser.FromPath(targetPath)
-	if err != nil {
-		return fmt.Errorf("failed to get target parser: %w", err)
-	}
-
-	targetParsed, err := tp.Parse(targetData)
-	if err != nil {
-		return fmt.Errorf("failed to parse target data: %w", err)
-	}
-
-	targetFlattened := diff.Flatten(targetParsed)
-	slog.Info("target flattened config", "config", targetFlattened)
-
-	result := diff.Compare("local-test-target", flattened, targetFlattened)
-
-	slog.Info("Drift Result", "is_drifted", result.IsDrifted)
-	if result.IsDrifted {
-		for _, d := range result.Added {
-			slog.Warn("ADDED", "key", d.Key, "value", d.TargetValue)
+		var adapter target.Adapter
+		switch targetCfg.Type {
+		case config.TypeSSH:
+			adapter = target.NewSSHAdapter(targetCfg)
+		default:
+			slog.Error("Unsupported target type", "type", targetCfg.Type, "name", targetCfg.Name)
+			continue
 		}
-		for _, d := range result.Removed {
-			slog.Warn("REMOVED", "key", d.Key, "value", d.CanonicalValue)
+
+		// fetching the target data
+		targetData, err := adapter.Fetch(ctx)
+		if err != nil {
+			slog.Error("Failed to fetch target data", "name", targetCfg.Name, "error", err)
+			continue
 		}
-		for _, d := range result.Changed {
-			slog.Warn("CHANGED", "key", d.Key, "from", d.CanonicalValue, "to", d.TargetValue)
+
+		// getting the appropriate parser for target path
+		tp, err := parser.FromPath(targetCfg.Path)
+		if err != nil {
+			slog.Error("Failed to get target parser", "name", targetCfg.Name, "path", targetCfg.Path, "error", err)
+			continue
 		}
-	} else {
-		slog.Info("No drift detected between canonical and target")
+
+		targetParsed, err := tp.Parse(targetData)
+		if err != nil {
+			slog.Error("Failed to parse target data", "name", targetCfg.Name, "error", err)
+			continue
+		}
+
+		targetFlattened := diff.Flatten(targetParsed)
+		slog.Info("target flattened config", "name", targetCfg.Name, "config", targetFlattened)
+
+		result := diff.Compare(targetCfg.Name, flattened, targetFlattened)
+
+		slog.Info("Drift Result", "target", targetCfg.Name, "is_drifted", result.IsDrifted)
+		if result.IsDrifted {
+			for _, d := range result.Added {
+				slog.Warn("ADDED", "target", targetCfg.Name, "key", d.Key, "value", d.TargetValue)
+			}
+			for _, d := range result.Removed {
+				slog.Warn("REMOVED", "target", targetCfg.Name, "key", d.Key, "value", d.CanonicalValue)
+			}
+			for _, d := range result.Changed {
+				slog.Warn("CHANGED", "target", targetCfg.Name, "key", d.Key, "from", d.CanonicalValue, "to", d.TargetValue)
+			}
+		} else {
+			slog.Info("No drift detected", "target", targetCfg.Name)
+		}
 	}
-	// --- End of Test ---
 
 	return nil
 }

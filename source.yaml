@@ -34,3 +34,20 @@ canonical:
   # path: config/s3.env
 
 interval: 20s
+
+targets:
+  - name: local-ssh-yaml
+    type: ssh
+    host: localhost
+    user: neel
+    key: /home/neel/.ssh/id_ed25519
+    path: /tmp/target-config.yaml
+    # known_hosts: /home/neel/.ssh/known_hosts  # optional, defaults to ~/.ssh/known_hosts
+    # timeout: 10s                             # optional duration
+
+  - name: local-ssh-toml
+    type: ssh
+    host: localhost
+    user: neel
+    key: /home/neel/.ssh/id_ed25519
+    path: /tmp/target-config.toml
