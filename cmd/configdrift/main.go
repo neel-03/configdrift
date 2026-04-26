@@ -9,6 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/neel-03/configdrift/internal/config"
+	"github.com/neel-03/configdrift/internal/diff"
 	"github.com/neel-03/configdrift/internal/logger"
 	"github.com/neel-03/configdrift/internal/parser"
 	"github.com/neel-03/configdrift/internal/source"
@@ -89,6 +90,7 @@ func run() error {
 		return fmt.Errorf("failed to parse data: %w", err)
 	}
 
-	slog.Info("parsed config", "config", parsed)
+	flattened := diff.Flatten(parsed)
+	slog.Info("flattened config", "config", flattened)
 	return nil
 }
