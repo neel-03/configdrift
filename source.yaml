@@ -1,8 +1,8 @@
 canonical:
   # for source = Local
   # ==========
-  # type: local
-  # path: ./config/local-config.yaml
+  type: local
+  path: ./config/local-config.yaml
   # --- OR ---
   # path: ./config/local-config.toml
   # --- OR ---
@@ -24,13 +24,13 @@ canonical:
 
   # for source = S3
   # ==========
-  type: s3
-  bucket: $CONFIGDRIFT_S3_BUCKET_NAME
-  region: $AWS_REGION
+  # type: s3
+  # bucket: $CONFIGDRIFT_S3_BUCKET_NAME
+  # region: $AWS_REGION
   # path: config/s3-config.yaml
   # --- OR ---
   # path: config/s3-config.toml
   # --- OR ---
-  path: config/s3.env
+  # path: config/s3.env
 
 interval: 20s

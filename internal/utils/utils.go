@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/BurntSushi/toml"
 	"github.com/joho/godotenv"
@@ -42,4 +43,11 @@ func ParseEnv(data []byte, target interface{}) error {
 	}
 
 	return fmt.Errorf("unsupported target type for env parsing: %T", target)
+}
+
+// IndexToKey converts an integer index to a string key suitable for dot notation
+// e.g.
+// 0 -> "[0]", 1 -> "[1]" ...
+func IndexToKey(i int) string {
+	return "[" + strconv.Itoa(i) + "]"
 }
