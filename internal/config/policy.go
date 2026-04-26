@@ -17,6 +17,11 @@ const (
 	TypeS3    = "s3"
 )
 
+// Supported target types
+const (
+	TypeSSH = "ssh"
+)
+
 // CanonicalConfig represents the source of truth configuration.
 type CanonicalConfig struct {
 	Type      string `yaml:"type" validate:"required,oneof=git local s3"`
@@ -32,6 +37,20 @@ type CanonicalConfig struct {
 type Policy struct {
 	Canonical CanonicalConfig `yaml:"canonical" validate:"required"`
 	Interval  string          `yaml:"interval" validate:"required"`
+	Targets   []TargetConfig  `yaml:"targets" validate:"required,min=1,dive"`
+}
+
+// TargetConfig represents a remote config target.
+type TargetConfig struct {
+	Name       string `yaml:"name" validate:"required"`
+	Type       string `yaml:"type" validate:"required,oneof=ssh"`
+	Host       string `yaml:"host" validate:"required_if=Type ssh"`
+	Port       int    `yaml:"port" validate:"omitempty"`
+	User       string `yaml:"user" validate:"required_if=Type ssh"`
+	Key        string `yaml:"key" validate:"required_if=Type ssh"`
+	KnownHosts string `yaml:"known_hosts" validate:"omitempty"`
+	Path       string `yaml:"path" validate:"required"`
+	Timeout    string `yaml:"timeout" validate:"omitempty"`
 }
 
 // Load reads and validates a Policy from a YAML file.
