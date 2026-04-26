@@ -91,6 +91,45 @@ func run() error {
 	}
 
 	flattened := diff.Flatten(parsed)
-	slog.Info("flattened config", "config", flattened)
+	slog.Info("canonical flattened config", "config", flattened)
+
+	// --- Temporary Test: comparing with Target Config ---
+	targetPath := "config/target-config.yaml"
+	targetData, err := os.ReadFile(targetPath)
+	if err != nil {
+		return fmt.Errorf("failed to read target file: %w", err)
+	}
+
+	tp, err := parser.FromPath(targetPath)
+	if err != nil {
+		return fmt.Errorf("failed to get target parser: %w", err)
+	}
+
+	targetParsed, err := tp.Parse(targetData)
+	if err != nil {
+		return fmt.Errorf("failed to parse target data: %w", err)
+	}
+
+	targetFlattened := diff.Flatten(targetParsed)
+	slog.Info("target flattened config", "config", targetFlattened)
+
+	result := diff.Compare("local-test-target", flattened, targetFlattened)
+
+	slog.Info("Drift Result", "is_drifted", result.IsDrifted)
+	if result.IsDrifted {
+		for _, d := range result.Added {
+			slog.Warn("ADDED", "key", d.Key, "value", d.TargetValue)
+		}
+		for _, d := range result.Removed {
+			slog.Warn("REMOVED", "key", d.Key, "value", d.CanonicalValue)
+		}
+		for _, d := range result.Changed {
+			slog.Warn("CHANGED", "key", d.Key, "from", d.CanonicalValue, "to", d.TargetValue)
+		}
+	} else {
+		slog.Info("No drift detected between canonical and target")
+	}
+	// --- End of Test ---
+
 	return nil
 }
