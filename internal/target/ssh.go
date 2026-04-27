@@ -142,7 +142,7 @@ func (a *SSHAdapter) ensureConnected(ctx context.Context) error {
 	sshConn, chans, reqs, err := ssh.NewClientConn(conn, addr, sshConfig)
 	if err != nil {
 		// close the raw TCP conn, ssh handshake failed so nothing else will clean it up
-		conn.Close()
+		_ = conn.Close()
 		return fmt.Errorf("unable to upgrade to ssh on %s: %w", addr, err)
 	}
 
