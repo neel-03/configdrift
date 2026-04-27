@@ -174,7 +174,9 @@ func setupMockSSHServer(t *testing.T, serverKeyData []byte, files map[string][]b
 
 	_, portStr, _ := net.SplitHostPort(listener.Addr().String())
 	var port int
-	fmt.Sscanf(portStr, "%d", &port)
+	if _, err := fmt.Sscanf(portStr, "%d", &port); err != nil {
+		t.Fatalf("failed to parse port from %s: %v", portStr, err)
+	}
 
 	t.Cleanup(func() { listener.Close() })
 
@@ -250,12 +252,15 @@ func addrParts(t *testing.T, addr string) (string, int) {
 	host, portStr, err := net.SplitHostPort(addr)
 	require.NoError(t, err)
 	var port int
-	fmt.Sscanf(portStr, "%d", &port)
+	if _, err := fmt.Sscanf(portStr, "%d", &port); err != nil {
+		t.Fatalf("failed to parse port from %s: %v", portStr, err)
+	}
 	return host, port
 }
 
 // newAdapter is a convenience constructor for tests.
-func newAdapter(host string, port int, keyFile, knownHostsFile, path string) *SSHAdapter {
+func newAdapter(t *testing.T, host string, port int, keyFile, knownHostsFile, path string) *SSHAdapter {
+	t.Helper()
 	return NewSSHAdapter(config.TargetConfig{
 		Name:       "test-target",
 		Type:       "ssh",
@@ -293,14 +298,15 @@ func TestSSHAdapter_Close_Idempotent(t *testing.T) {
 	keyData := generateTestKey(t)
 	keyFile := writeTempFile(t, "key_", keyData)
 
-	signer, _ := ssh.ParsePrivateKey(keyData)
+	signer, err := ssh.ParsePrivateKey(keyData)
+	require.NoError(t, err)
 	srv := setupMockSSHServer(t, keyData, map[string][]byte{"/config.yaml": []byte("x: 1")})
 	host, port := addrParts(t, srv.addr)
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
-	a := newAdapter(host, port, keyFile, knownHostsFile, "/config.yaml")
+	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/config.yaml")
 
-	_, err := a.Fetch(context.Background())
+	_, err = a.Fetch(context.Background())
 	require.NoError(t, err)
 
 	assert.NoError(t, a.Close())
@@ -312,13 +318,14 @@ func TestSSHAdapter_Fetch_Success(t *testing.T) {
 	keyData := generateTestKey(t)
 	keyFile := writeTempFile(t, "key_", keyData)
 
-	signer, _ := ssh.ParsePrivateKey(keyData)
+	signer, err := ssh.ParsePrivateKey(keyData)
+	require.NoError(t, err)
 	files := map[string][]byte{"/etc/app/config.yaml": []byte("host: localhost\nport: 8080\n")}
 	srv := setupMockSSHServer(t, keyData, files)
 	host, port := addrParts(t, srv.addr)
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
-	a := newAdapter(host, port, keyFile, knownHostsFile, "/etc/app/config.yaml")
+	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/etc/app/config.yaml")
 	defer a.Close()
 
 	data, err := a.Fetch(context.Background())
@@ -331,16 +338,17 @@ func TestSSHAdapter_Fetch_ReuseConnection(t *testing.T) {
 	keyData := generateTestKey(t)
 	keyFile := writeTempFile(t, "key_", keyData)
 
-	signer, _ := ssh.ParsePrivateKey(keyData)
+	signer, err := ssh.ParsePrivateKey(keyData)
+	require.NoError(t, err)
 	files := map[string][]byte{"/config.yaml": []byte("x: 1")}
 	srv := setupMockSSHServer(t, keyData, files)
 	host, port := addrParts(t, srv.addr)
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
-	a := newAdapter(host, port, keyFile, knownHostsFile, "/config.yaml")
+	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/config.yaml")
 	defer a.Close()
 
-	_, err := a.Fetch(context.Background())
+	_, err = a.Fetch(context.Background())
 	require.NoError(t, err)
 	firstClient := a.client // grab the client pointer
 
@@ -357,17 +365,18 @@ func TestSSHAdapter_Fetch_StaleConnection(t *testing.T) {
 	keyData := generateTestKey(t)
 	keyFile := writeTempFile(t, "key_", keyData)
 
-	signer, _ := ssh.ParsePrivateKey(keyData)
+	signer, err := ssh.ParsePrivateKey(keyData)
+	require.NoError(t, err)
 	files := map[string][]byte{"/config.yaml": []byte("reconnected: true")}
 	srv := setupMockSSHServer(t, keyData, files)
 	host, port := addrParts(t, srv.addr)
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
-	a := newAdapter(host, port, keyFile, knownHostsFile, "/config.yaml")
+	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/config.yaml")
 	defer a.Close()
 
 	// first fetch establishes the connection
-	_, err := a.Fetch(context.Background())
+	_, err = a.Fetch(context.Background())
 	require.NoError(t, err)
 
 	// simulate stale connection — close the client but don't nil it
@@ -386,16 +395,17 @@ func TestSSHAdapter_Fetch_FileNotFound(t *testing.T) {
 	keyData := generateTestKey(t)
 	keyFile := writeTempFile(t, "key_", keyData)
 
-	signer, _ := ssh.ParsePrivateKey(keyData)
+	signer, err := ssh.ParsePrivateKey(keyData)
+	require.NoError(t, err)
 	// server has no files — any path will 404
 	srv := setupMockSSHServer(t, keyData, map[string][]byte{})
 	host, port := addrParts(t, srv.addr)
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
-	a := newAdapter(host, port, keyFile, knownHostsFile, "/does/not/exist.yaml")
+	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/does/not/exist.yaml")
 	defer a.Close()
 
-	_, err := a.Fetch(context.Background())
+	_, err = a.Fetch(context.Background())
 	assert.Error(t, err, "fetching a non-existent remote file should return an error")
 }
 
@@ -429,7 +439,8 @@ func TestSSHAdapter_Fetch_UnknownHostKey(t *testing.T) {
 	serverKeyFile := writeTempFile(t, "server_key_", serverKeyData)
 
 	differentKeyData := generateTestKey(t)
-	differentSigner, _ := ssh.ParsePrivateKey(differentKeyData)
+	differentSigner, err := ssh.ParsePrivateKey(differentKeyData)
+	require.NoError(t, err)
 
 	srv := setupMockSSHServer(t, serverKeyData, map[string][]byte{})
 	host, port := addrParts(t, srv.addr)
@@ -437,10 +448,10 @@ func TestSSHAdapter_Fetch_UnknownHostKey(t *testing.T) {
 	// known_hosts has the DIFFERENT key — server will present the wrong one
 	knownHostsFile := buildKnownHostsFile(t, host, port, differentSigner.PublicKey())
 
-	a := newAdapter(host, port, serverKeyFile, knownHostsFile, "/config.yaml")
+	a := newAdapter(t, host, port, serverKeyFile, knownHostsFile, "/config.yaml")
 	defer a.Close()
 
-	_, err := a.Fetch(context.Background())
+	_, err = a.Fetch(context.Background())
 	assert.Error(t, err, "should reject connection when server key doesn't match known_hosts")
 }
 
@@ -488,13 +499,14 @@ func TestSSHAdapter_Fetch_Concurrent(t *testing.T) {
 	keyData := generateTestKey(t)
 	keyFile := writeTempFile(t, "key_", keyData)
 
-	signer, _ := ssh.ParsePrivateKey(keyData)
+	signer, err := ssh.ParsePrivateKey(keyData)
+	require.NoError(t, err)
 	files := map[string][]byte{"/config.yaml": []byte("concurrent: true")}
 	srv := setupMockSSHServer(t, keyData, files)
 	host, port := addrParts(t, srv.addr)
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
-	a := newAdapter(host, port, keyFile, knownHostsFile, "/config.yaml")
+	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/config.yaml")
 	defer a.Close()
 
 	const goroutines = 5
@@ -521,7 +533,8 @@ func TestSSHAdapter_Fetch_CustomTimeout(t *testing.T) {
 	keyData := generateTestKey(t)
 	keyFile := writeTempFile(t, "key_", keyData)
 
-	signer, _ := ssh.ParsePrivateKey(keyData)
+	signer, err := ssh.ParsePrivateKey(keyData)
+	require.NoError(t, err)
 	files := map[string][]byte{"/config.yaml": []byte("timeout: test")}
 	srv := setupMockSSHServer(t, keyData, files)
 	host, port := addrParts(t, srv.addr)
@@ -549,13 +562,14 @@ func TestSSHAdapter_Fetch_EmptyFile(t *testing.T) {
 	keyData := generateTestKey(t)
 	keyFile := writeTempFile(t, "key_", keyData)
 
-	signer, _ := ssh.ParsePrivateKey(keyData)
+	signer, err := ssh.ParsePrivateKey(keyData)
+	require.NoError(t, err)
 	files := map[string][]byte{"/empty.yaml": {}}
 	srv := setupMockSSHServer(t, keyData, files)
 	host, port := addrParts(t, srv.addr)
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
-	a := newAdapter(host, port, keyFile, knownHostsFile, "/empty.yaml")
+	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/empty.yaml")
 	defer a.Close()
 
 	data, err := a.Fetch(context.Background())
