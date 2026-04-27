@@ -51,3 +51,11 @@ targets:
     user: neel
     key: /home/neel/.ssh/id_ed25519
     path: /tmp/target-config.toml
+
+  - name: termux-ssh
+    type: ssh
+    host: [IP_ADDRESS]
+    port: 8022
+    user: u0_a16
+    key: /home/neel/.ssh/id_ed25519
+    path: /data/data/com.termux/files/home/configdrift/secrets.toml
