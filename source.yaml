@@ -36,26 +36,32 @@ canonical:
 interval: 20s
 
 targets:
-  - name: local-ssh-yaml
-    type: ssh
-    host: localhost
-    user: neel
-    key: /home/neel/.ssh/id_ed25519
-    path: /tmp/target-config.yaml
-    # known_hosts: /home/neel/.ssh/known_hosts  # optional, defaults to ~/.ssh/known_hosts
-    # timeout: 10s                             # optional duration
+  # - name: local-ssh-yaml
+  #   type: ssh
+  #   host: localhost
+  #   user: neel
+  #   key: /home/neel/.ssh/id_ed25519
+  #   path: /tmp/target-config.yaml
+  # known_hosts: /home/neel/.ssh/known_hosts  # optional, defaults to ~/.ssh/known_hosts
+  # timeout: 10s                             # optional duration
 
-  - name: local-ssh-toml
-    type: ssh
-    host: localhost
-    user: neel
-    key: /home/neel/.ssh/id_ed25519
-    path: /tmp/target-config.toml
+  # - name: local-ssh-toml
+  #   type: ssh
+  #   host: localhost
+  #   user: neel
+  #   key: /home/neel/.ssh/id_ed25519
+  #   path: /tmp/target-config.toml
 
-  - name: termux-ssh
-    type: ssh
-    host: [IP_ADDRESS]
-    port: 8022
-    user: u0_a16
-    key: /home/neel/.ssh/id_ed25519
-    path: /data/data/com.termux/files/home/configdrift/secrets.toml
+  # - name: termux-ssh
+  #   type: ssh
+  #   host: [IP_ADDRESS]
+  #   port: 8022
+  #   user: u0_a16
+  #   key: /home/neel/.ssh/id_ed25519
+  #   path: /data/data/com.termux/files/home/configdrift/secrets.toml
+
+  - name: local-docker
+    type: docker
+    container: test_container
+    path: /path/inside/container/config.yaml
+    timeout: 5s

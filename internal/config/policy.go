@@ -19,7 +19,8 @@ const (
 
 // Supported target types
 const (
-	TypeSSH = "ssh"
+	TypeSSH    = "ssh"
+	TypeDocker = "docker"
 )
 
 // CanonicalConfig represents the source of truth configuration.
@@ -43,12 +44,13 @@ type Policy struct {
 // TargetConfig represents a remote config target.
 type TargetConfig struct {
 	Name       string `yaml:"name" validate:"required"`
-	Type       string `yaml:"type" validate:"required,oneof=ssh"`
-	Host       string `yaml:"host" validate:"required_if=Type ssh"`
+	Type       string `yaml:"type" validate:"required,oneof=ssh docker"`
+	Host       string `yaml:"host" validate:"required_if=Type ssh required_if=Type docker"`
 	Port       int    `yaml:"port" validate:"omitempty"`
 	User       string `yaml:"user" validate:"required_if=Type ssh"`
 	Key        string `yaml:"key" validate:"required_if=Type ssh"`
 	KnownHosts string `yaml:"known_hosts" validate:"omitempty"`
+	Container  string `yaml:"container" validate:"required_if=Type docker"`
 	Path       string `yaml:"path" validate:"required"`
 	Timeout    string `yaml:"timeout" validate:"omitempty"`
 }

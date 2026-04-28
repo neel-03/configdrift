@@ -10,6 +10,7 @@ require (
 	github.com/go-git/go-git/v5 v5.18.0
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/joho/godotenv v1.5.1
+	github.com/moby/moby/client v0.4.1
 	github.com/pkg/sftp v1.13.10
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.45.0
@@ -59,7 +60,6 @@ require (
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/moby/api v1.54.2 // indirect
-	github.com/moby/moby/client v0.4.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect

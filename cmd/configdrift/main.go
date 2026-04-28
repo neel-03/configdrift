@@ -102,6 +102,8 @@ func run() error {
 		switch targetCfg.Type {
 		case config.TypeSSH:
 			adapter = target.NewSSHAdapter(targetCfg)
+		case config.TypeDocker:
+			adapter = target.NewDockerAdapter(targetCfg)
 		default:
 			slog.Error("Unsupported target type", "type", targetCfg.Type, "name", targetCfg.Name)
 			continue
