@@ -47,12 +47,9 @@ func (a *DockerAdapter) Fetch(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 
-	fetchCtx := ctx
-	var cancel context.CancelFunc
-
 	// apply the timeout if it was specified in the config.
 	// this makes sure we don't hang indefinitely if the container is unresponsive.
-	fetchCtx, cancel = a.apply_timeout(ctx)
+	fetchCtx, cancel := a.apply_timeout(ctx)
 	if cancel != nil {
 		defer cancel()
 	}
