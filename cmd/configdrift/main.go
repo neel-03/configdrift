@@ -104,6 +104,12 @@ func run() error {
 			adapter = target.NewSSHAdapter(targetCfg)
 		case config.TypeDocker:
 			adapter = target.NewDockerAdapter(targetCfg)
+		case config.TypeK8s:
+			adapter, err = target.NewK8sAdapter(targetCfg)
+			if err != nil {
+				slog.Error("Failed to create k8s adapter", "name", targetCfg.Name, "error", err)
+				continue
+			}
 		default:
 			slog.Error("Unsupported target type", "type", targetCfg.Type, "name", targetCfg.Name)
 			continue

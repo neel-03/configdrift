@@ -49,7 +49,7 @@ func (a *DockerAdapter) Fetch(ctx context.Context) ([]byte, error) {
 
 	// apply the timeout if it was specified in the config.
 	// this makes sure we don't hang indefinitely if the container is unresponsive.
-	fetchCtx, cancel := a.apply_timeout(ctx)
+	fetchCtx, cancel := a.applyTimeout(ctx)
 	if cancel != nil {
 		defer cancel()
 	}
@@ -88,14 +88,15 @@ func (a *DockerAdapter) ensureDockerClient() error {
 	return nil
 }
 
-// apply_timeout applies the configured timeout to the context if specified.
-func (a *DockerAdapter) apply_timeout(ctx context.Context) (context.Context, context.CancelFunc) {
+// applyTimeout applies the configured timeout to the context if specified.
+func (a *DockerAdapter) applyTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
 	if a.cfg.Timeout == "" {
 		return ctx, nil
 	}
 	duration, err := time.ParseDuration(a.cfg.Timeout)
 	if err != nil {
-		slog.Warn("Ignoring invalid timeout", "target", a.Name(), "invalid_timeout", a.cfg.Timeout, "error", err)
+		slog.Warn("Ignoring invalid timeout", "target", a.Name(),
+			"invalid_timeout", a.cfg.Timeout, "error", err)
 		return ctx, nil
 	}
 	return context.WithTimeout(ctx, duration)
