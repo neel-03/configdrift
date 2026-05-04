@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/BurntSushi/toml"
@@ -50,4 +52,17 @@ func ParseEnv(data []byte, target interface{}) error {
 // 0 -> "[0]", 1 -> "[1]" ...
 func IndexToKey(i int) string {
 	return "[" + strconv.Itoa(i) + "]"
+}
+
+// expandPath resolves ~ in paths as os.ReadFile
+// won't expand the tilde automatically.
+func ExpandPath(path string) string {
+	if len(path) == 0 || path[0] != '~' {
+		return path
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return path // can't expand, we return as-is, let the caller handle the error
+	}
+	return filepath.Join(home, path[1:])
 }

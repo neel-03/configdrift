@@ -5,18 +5,6 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    ignore:
-      # these x/ packages track Go releases closely
-      # and bump the go directive when updated aggressively
-      # we can upgrade them manually when we decide to upgrade go
-      - dependency-name: "golang.org/x/crypto"
-        update-types: ["version-update:semver-minor"]
-      - dependency-name: "golang.org/x/net"
-        update-types: ["version-update:semver-minor"]
-      - dependency-name: "golang.org/x/sys"
-        update-types: ["version-update:semver-minor"]
-      - dependency-name: "golang.org/x/text"
-        update-types: ["version-update:semver-minor"]
   
   # github actions
   - package-ecosystem: "github-actions"

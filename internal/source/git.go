@@ -58,13 +58,13 @@ func (gs *GitSource) Fetch(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open root %s: %w", gs.dir, err)
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 
 	f, err := root.Open(gs.file)
 	if err != nil {
 		return nil, fmt.Errorf("open git source file %s: %w", gs.file, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	data, err := io.ReadAll(f)
 	if err != nil {
@@ -83,7 +83,7 @@ func (gs *GitSource) String() string {
 func buildCacheDir(repo, branch string) string {
 	// Use SHA256 to avoid path collisions and keep directory names safe
 	hash := sha256.New()
-	hash.Write([]byte(fmt.Sprintf("%s|%s", repo, branch)))
+	_, _ = fmt.Fprintf(hash, "%s|%s", repo, branch)
 	id := fmt.Sprintf("%x", hash.Sum(nil))[:12]
 
 	baseDir, err := os.UserCacheDir()

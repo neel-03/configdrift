@@ -73,13 +73,13 @@ func (a *SSHAdapter) readFileViaSFTP() ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sftp subsystem on %s: %w", a.cfg.Host, err)
 	}
-	defer sftpClient.Close()
+	defer func() { _ = sftpClient.Close() }()
 
 	f, err := sftpClient.Open(a.cfg.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open remote file %s: %w", a.cfg.Path, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	data, err := io.ReadAll(f)
 	if err != nil {

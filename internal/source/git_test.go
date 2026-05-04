@@ -102,7 +102,7 @@ func updateMockRepo(t *testing.T, dir, filename, content string) {
 func newTestGitSource(t *testing.T, repo, branch, file string) *GitSource {
 	// Use a unique ID based on the test name and timestamp
 	hash := sha256.New()
-	hash.Write([]byte(fmt.Sprintf("%s|%d", t.Name(), time.Now().UnixNano())))
+	_, _ = fmt.Fprintf(hash, "%s|%d", t.Name(), time.Now().UnixNano())
 	id := fmt.Sprintf("%x", hash.Sum(nil))[:12]
 
 	cacheDir := filepath.Join(t.TempDir(), "configdrift", "git", id)

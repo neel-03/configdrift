@@ -5,10 +5,18 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
+	"os"
 	"path/filepath"
 
 	"github.com/moby/moby/client"
+	"github.com/neel-03/configdrift/internal/utils"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
+
+// -- Docker Utils --
 
 // dockerClient is a minimal interface over the Docker SDK client.
 // we only need two operations:
@@ -80,4 +88,72 @@ func extractFromTar(reader io.Reader, filename string) ([]byte, error) {
 	}
 
 	return nil, fmt.Errorf("file %q not found in Docker tar response", filename)
+}
+
+// -- K8s Utils --
+
+// buildClientset constructs a [kubernetes.Clientset] from the given kubeconfig path.
+// resolution order (mirrors kubectl behaviour):
+//  1. explicit kubeConfigPath arg (from targets.yaml kubeconfig field)
+//  2. KUBECONFIG environment variable
+//  3. ~/.kube/config (default kubeconfig location)
+//  4. in-cluster config (when running inside a Pod - service account token)
+//
+// this means configdrift works correctly both when run locally by a developer
+// and when deployed as a Pod inside the cluster it's monitoring.
+func buildClientset(kubeConfigPath string) (kubernetes.Interface, error) {
+	restCfg, err := buildRestCfg(kubeConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(restCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientSet, nil
+}
+
+// buildRestCfg builds a [rest.Config] from the given kubeconfig path.
+func buildRestCfg(kubeConfigPath string) (*rest.Config, error) {
+	// case 1: explicit path from config
+	if kubeConfigPath != "" {
+		slog.Info("Reading kubeconfig from explicit path", "path", kubeConfigPath)
+		return createRestConfigFromPath(kubeConfigPath)
+	}
+
+	// case 2: KUBECONFIG env var
+	if env := os.Getenv("KUBECONFIG"); env != "" {
+		slog.Info("Reading kubeconfig from KUBECONFIG env var", "path", env)
+		return createRestConfigFromPath(env)
+	}
+
+	// case 3: default kubeconfig location
+	defaultKubeConfig := utils.ExpandPath("~/.kube/config")
+	if _, err := os.Stat(defaultKubeConfig); err == nil {
+		slog.Info("Reading kubeconfig from default location", "path", defaultKubeConfig)
+		return createRestConfigFromPath(defaultKubeConfig)
+	}
+
+	// case 4: in-cluster config (when running inside a Pod)
+	slog.Info("Attempting in-cluster configuration")
+	cfg, err := rest.InClusterConfig()
+	if err == nil {
+		return cfg, nil
+	}
+
+	return nil, fmt.Errorf("could not load kubeconfig (tried explicit path, env var, default location, and in-cluster): %w", err)
+}
+
+// createRestConfigFromPath creates a [rest.Config] from the given kubeconfig path.
+// it expands ~ in the path and uses clientcmd.BuildConfigFromFlags
+// to build the rest.Config.
+func createRestConfigFromPath(path string) (*rest.Config, error) {
+	expandedPath := utils.ExpandPath(path)
+	cfg, err := clientcmd.BuildConfigFromFlags("", expandedPath)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
