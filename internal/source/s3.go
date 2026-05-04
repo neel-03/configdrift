@@ -69,7 +69,7 @@ func (s *S3Source) Fetch(ctx context.Context) ([]byte, error) {
 		}
 		return nil, fmt.Errorf("s3 get object (bucket=%s key=%s): %w", s.bucket, s.key, err)
 	}
-	defer out.Body.Close()
+	defer func() { _ = out.Body.Close() }()
 
 	data, err := io.ReadAll(out.Body)
 	if err != nil {

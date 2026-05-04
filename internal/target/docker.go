@@ -59,7 +59,7 @@ func (a *DockerAdapter) Fetch(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to copy file from container %q: %w", a.cfg.Container, err)
 	}
-	defer tarStream.Close()
+	defer func() { _ = tarStream.Close() }()
 
 	return extractFromTar(tarStream, filepath.Base(a.cfg.Path))
 }

@@ -327,7 +327,7 @@ func TestDockerAdapter_Integration(t *testing.T) {
 	if err != nil {
 		t.Skip("Docker not available:", err)
 	}
-	defer c.client.Close()
+	defer func() { _ = c.client.Close() }()
 
 	// this test expects a container named "configdrift-test" to be running
 	// with a file at /tmp/test-config.yaml containing "integration: true".
@@ -342,7 +342,7 @@ func TestDockerAdapter_Integration(t *testing.T) {
 	}
 
 	a := NewDockerAdapter(cfg)
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	data, err := a.Fetch(context.Background())
 	if err != nil {

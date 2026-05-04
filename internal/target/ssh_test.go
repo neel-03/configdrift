@@ -41,7 +41,7 @@ func writeTempFile(t *testing.T, prefix string, data []byte) string {
 	t.Helper()
 	f, err := os.CreateTemp("", prefix)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(f.Name()) })
+	t.Cleanup(func() { _ = os.Remove(f.Name()) })
 
 	_, err = f.Write(data)
 	require.NoError(t, err)
@@ -178,11 +178,11 @@ func setupMockSSHServer(t *testing.T, serverKeyData []byte, files map[string][]b
 		t.Fatalf("failed to parse port from %s: %v", portStr, err)
 	}
 
-	t.Cleanup(func() { listener.Close() })
+	t.Cleanup(func() { _ = listener.Close() })
 
 	return &mockServer{
 		addr:    listener.Addr().String(),
-		cleanup: func() { listener.Close() },
+		cleanup: func() { _ = listener.Close() },
 	}
 }
 
@@ -210,7 +210,7 @@ func handleSSHConn(conn net.Conn, cfg *ssh.ServerConfig, files map[string][]byte
 // handleSession services requests on an SSH session channel.
 // only handles the "sftp" subsystem — which is all configdrift needs.
 func handleSession(ch ssh.Channel, reqs <-chan *ssh.Request, files map[string][]byte) {
-	defer ch.Close()
+	defer func() { _ = ch.Close() }()
 
 	for req := range reqs {
 		if req.Type != "subsystem" {
@@ -326,7 +326,7 @@ func TestSSHAdapter_Fetch_Success(t *testing.T) {
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
 	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/etc/app/config.yaml")
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	data, err := a.Fetch(context.Background())
 	require.NoError(t, err)
@@ -346,7 +346,7 @@ func TestSSHAdapter_Fetch_ReuseConnection(t *testing.T) {
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
 	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/config.yaml")
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	_, err = a.Fetch(context.Background())
 	require.NoError(t, err)
@@ -381,7 +381,7 @@ func TestSSHAdapter_Fetch_StaleConnection(t *testing.T) {
 
 	// simulate stale connection — close the client but don't nil it
 	// this is what happens after a server reboot or idle SSH timeout
-	a.client.Close()
+	_ = a.client.Close()
 
 	// second fetch should detect the dead client, reconnect, and succeed
 	data, err := a.Fetch(context.Background())
