@@ -19,7 +19,7 @@ func TestFromPath(t *testing.T) {
 		{"env", "env"},
 		{"production.env.local", "env"},
 		{"other.txt", "error"},
-		{"config.yaml.env", "env"}, // Should be env because .yaml is not the last extension, and 'env' is a component
+		{"config.yaml.env", "env"},  // Should be env because .yaml is not the last extension, and 'env' is a component
 		{"config.env.yaml", "yaml"}, // Should be yaml because .yaml is the last extension and we check standard extensions first
 	}
 

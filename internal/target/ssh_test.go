@@ -373,7 +373,7 @@ func TestSSHAdapter_Fetch_StaleConnection(t *testing.T) {
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
 	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/config.yaml")
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	// first fetch establishes the connection
 	_, err = a.Fetch(context.Background())
@@ -403,7 +403,7 @@ func TestSSHAdapter_Fetch_FileNotFound(t *testing.T) {
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
 	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/does/not/exist.yaml")
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	_, err = a.Fetch(context.Background())
 	assert.Error(t, err, "fetching a non-existent remote file should return an error")
@@ -423,7 +423,7 @@ func TestSSHAdapter_Fetch_CancelledContext(t *testing.T) {
 		Key:  keyFile,
 		// no known_hosts — we won't even get that far
 	})
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // cancel immediately
@@ -449,7 +449,7 @@ func TestSSHAdapter_Fetch_UnknownHostKey(t *testing.T) {
 	knownHostsFile := buildKnownHostsFile(t, host, port, differentSigner.PublicKey())
 
 	a := newAdapter(t, host, port, serverKeyFile, knownHostsFile, "/config.yaml")
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	_, err = a.Fetch(context.Background())
 	assert.Error(t, err, "should reject connection when server key doesn't match known_hosts")
@@ -470,7 +470,7 @@ func TestSSHAdapter_Fetch_NoKnownHostsFile(t *testing.T) {
 		KnownHosts: "/definitely/does/not/exist/known_hosts",
 		Path:       "/config.yaml",
 	})
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	_, err := a.Fetch(context.Background())
 	assert.Error(t, err, "should error when specified known_hosts file does not exist")
@@ -486,7 +486,7 @@ func TestSSHAdapter_Fetch_MissingPrivateKey(t *testing.T) {
 		Key:  "/this/key/does/not/exist",
 		Path: "/config.yaml",
 	})
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	_, err := a.Fetch(context.Background())
 	assert.Error(t, err)
@@ -507,7 +507,7 @@ func TestSSHAdapter_Fetch_Concurrent(t *testing.T) {
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
 	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/config.yaml")
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	const goroutines = 5
 	var wg sync.WaitGroup
@@ -550,7 +550,7 @@ func TestSSHAdapter_Fetch_CustomTimeout(t *testing.T) {
 		Path:       "/config.yaml",
 		Timeout:    "10s", // explicit timeout — should be accepted without error
 	})
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	data, err := a.Fetch(context.Background())
 	require.NoError(t, err)
@@ -570,7 +570,7 @@ func TestSSHAdapter_Fetch_EmptyFile(t *testing.T) {
 	knownHostsFile := buildKnownHostsFile(t, host, port, signer.PublicKey())
 
 	a := newAdapter(t, host, port, keyFile, knownHostsFile, "/empty.yaml")
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 
 	data, err := a.Fetch(context.Background())
 	require.NoError(t, err)
