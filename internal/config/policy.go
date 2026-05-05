@@ -54,7 +54,7 @@ type TargetConfig struct {
 	Container  string `yaml:"container" validate:"required_if=Type docker"`
 	Namespace  string `yaml:"namespace" validate:"required_if=Type k8s"`
 	ConfigMap  string `yaml:"configmap" validate:"required_if=Type k8s"`
-	KubeConfig string `yaml:"kubeconfig" validate:"required_if=Type k8s"`
+	KubeConfig string `yaml:"kubeconfig" validate:"omitempty"`
 	CMKey      string `yaml:"cm_key" validate:"required_if=Type k8s"`
 	Path       string `yaml:"path" validate:"required"`
 	Timeout    string `yaml:"timeout" validate:"omitempty"`
