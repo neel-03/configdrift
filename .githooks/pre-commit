@@ -23,7 +23,7 @@ fi
 # 1. Go Mod Tidy
 echo -e "Checking go.mod..."
 go mod tidy
-if [[ -n $(git status --porcelain go.mod go.sum) ]]; then
+if ! git diff --exit-code go.mod go.sum > /dev/null; then
     echo -e "${RED}Error: go.mod or go.sum are not tidy.${NC}"
     echo "Please run 'go mod tidy' and stage the changes before committing."
     exit 1
