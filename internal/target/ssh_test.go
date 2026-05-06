@@ -159,7 +159,7 @@ func setupMockSSHServer(t *testing.T, serverKeyData []byte, files map[string][]b
 	require.NoError(t, err, "parsing server host key should not fail")
 	srvConfig.AddHostKey(signer)
 
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 
 	go func() {

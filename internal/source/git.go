@@ -1,3 +1,4 @@
+// Package source provides interfaces and implementations for configuration sources.
 package source
 
 import (

@@ -158,7 +158,7 @@ func TestDockerAdapter_Fetch_EmptyFile(t *testing.T) {
 	assert.Empty(t, data, "empty file should return empty bytes without error")
 }
 
-func TestDockerAdapter_Fetch_CancelledContext(t *testing.T) {
+func TestDockerAdapter_Fetch_CancelledContext(_ *testing.T) {
 	// a cancelled context should prevent the fetch from proceeding
 	// in real usage this happens when the watcher shuts down mid-cycle
 	mock := &mockDockerClient{

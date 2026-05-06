@@ -2,8 +2,10 @@ package parser
 
 import "github.com/neel-03/configdrift/internal/utils"
 
+// YAMLParser handles parsing of YAML files.
 type YAMLParser struct{}
 
+// NewYAMLParser creates a new YAMLParser.
 func NewYAMLParser() *YAMLParser {
 	return &YAMLParser{}
 }

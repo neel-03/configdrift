@@ -1,0 +1,132 @@
+# golangci-lint v2 — production config
+# Docs: https://golangci-lint.run/usage/configuration/
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true                  # lint test files too
+
+issues:
+  # v2: skip-dirs moved here (was run.skip-dirs in v1 — that's likely your breakage)
+  exclude-dirs:
+    - bin
+    - logs
+    - vendor
+    - third_party
+
+  # Don't limit the number of issues shown
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  # Fix common false-positives
+  exclude-rules:
+    # Ignore err checks in defer (very common pattern)
+    - source: "defer "
+      linters: [errcheck]
+
+    # Relax complexity in test files
+    - path: "_test\\.go"
+      linters: [gocyclo, funlen, goconst, noctx, gosec]
+
+    # Ignore generated files
+    - path: "\\.pb\\.go$"
+      linters: [all]
+
+linters-settings:
+  govet:
+    enable:
+      - shadow           # v2: was "shadowing" in v1 — renamed
+
+  gocyclo:
+    min-complexity: 15
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  errcheck:
+    check-type-assertions: true   # catch unchecked x.(T)
+    check-blank: true             # catch _ = someErrFunc()
+
+  revive:
+    severity: warning
+    rules:
+      - name: exported            # exported symbols must have docs
+      - name: var-naming          # Go naming conventions
+      - name: error-return        # error should be the last return val
+      - name: error-strings       # error strings should not be capitalised
+      - name: increment-decrement # use i++ not i += 1
+      - name: indent-error-flow   # don't unnecessarily indent happy path
+      - name: unused-parameter    # flag unused function params
+
+  misspell:
+    locale: US
+
+  gosec:
+    excludes:
+      - G104   # errors unhandled (already caught by errcheck)
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+    disabled-checks:
+      - commentedOutCode   # too noisy during active dev
+      - whyNoLint
+
+  funlen:
+    lines: 150
+    statements: 80
+
+  lll:
+    line-length: 200
+
+  depguard:
+    rules:
+      main:
+        files:
+          - $all
+        deny:
+          - pkg: "github.com/pkg/errors"
+            desc: "use stdlib errors + fmt.Errorf with %w instead"
+
+formatters-settings:
+  goimports:
+    local-prefixes: github.com/neel-03/configdrift
+
+formatters:
+  enable:
+    - goimports
+
+linters:
+  disable-all: true
+  enable:
+    # --- Correctness ---
+    - govet          # go vet checks (shadow, printf, etc.)
+    - errcheck       # unchecked errors
+    - staticcheck    # SA* — static analysis (replaces "unused" in v2)
+    - ineffassign    # assigned but never used
+    - bodyclose      # HTTP response body not closed
+    - rowserrcheck   # rows.Err() unchecked
+    - sqlclosecheck  # sql.Rows/Stmt not closed
+    - noctx          # HTTP requests without context
+
+    # --- Style / Maintainability ---
+    - revive         # replacement for deprecated golint
+
+    - misspell       # typos in comments/strings
+    - whitespace     # leading/trailing blank lines
+
+    - gocritic       # opinionated style checks
+
+    # --- Security ---
+    - gosec          # security issues (G* rules)
+
+    # --- Performance ---
+    - prealloc       # suggest pre-allocating slices
+
+    # --- Bugs ---
+    - unconvert      # unnecessary type conversions
+    - unparam        # function params that are always the same value
+    - predeclared    # shadowing built-ins (len, cap, new…)

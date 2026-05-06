@@ -1,3 +1,4 @@
+// Package main is the entry point for configdrift.
 package main
 
 import (
@@ -14,9 +15,14 @@ import (
 	"github.com/neel-03/configdrift/internal/parser"
 	"github.com/neel-03/configdrift/internal/source"
 	"github.com/neel-03/configdrift/internal/target"
+	"github.com/neel-03/configdrift/internal/version"
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "--version" {
+		fmt.Printf("configdrift %s (commit: %s, built at: %s)\n", version.Version, version.Commit, version.BuildTime)
+		return
+	}
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)

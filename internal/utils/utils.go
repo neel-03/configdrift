@@ -1,3 +1,4 @@
+// Package utils provides utility functions.
 package utils
 
 import (
@@ -54,7 +55,7 @@ func IndexToKey(i int) string {
 	return "[" + strconv.Itoa(i) + "]"
 }
 
-// expandPath resolves ~ in paths as os.ReadFile
+// ExpandPath resolves ~ in paths as os.ReadFile
 // won't expand the tilde automatically.
 func ExpandPath(path string) string {
 	if len(path) == 0 || path[0] != '~' {

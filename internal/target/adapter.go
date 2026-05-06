@@ -1,3 +1,4 @@
+// Package target provides implementations for configuration targets.
 package target
 
 import "context"

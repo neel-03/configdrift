@@ -15,9 +15,9 @@ func TestBuildRestCfg_ResolutionOrder(t *testing.T) {
 	pathExplicit := filepath.Join(tmpDir, "explicit.config")
 	pathEnv := filepath.Join(tmpDir, "env.config")
 
-	err := os.WriteFile(pathExplicit, []byte("invalid config content"), 0644)
+	err := os.WriteFile(pathExplicit, []byte("invalid config content"), 0600)
 	assert.NoError(t, err)
-	err = os.WriteFile(pathEnv, []byte("invalid config content"), 0644)
+	err = os.WriteFile(pathEnv, []byte("invalid config content"), 0600)
 	assert.NoError(t, err)
 
 	t.Run("Explicit path takes precedence over Env Var", func(t *testing.T) {
