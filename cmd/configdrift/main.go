@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+
 	"github.com/neel-03/configdrift/internal/config"
 	"github.com/neel-03/configdrift/internal/diff"
 	"github.com/neel-03/configdrift/internal/logger"

@@ -1,6 +1,7 @@
 package source
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ func TestLocalSource(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Fetch failed: %v", err)
 		}
-		if string(data) != string(content) {
+		if !bytes.Equal(data, content) {
 			t.Errorf("expected %s, got %s", content, data)
 		}
 	})
@@ -108,7 +109,7 @@ func TestLocalSource(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				data, err := src.Fetch(context.Background())
-				if err != nil || string(data) != string(content) {
+				if err != nil || !bytes.Equal(data, content) {
 					t.Errorf("concurrent fetch failed or data mismatch")
 				}
 			}()

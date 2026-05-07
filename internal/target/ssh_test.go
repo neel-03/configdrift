@@ -15,11 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neel-03/configdrift/internal/config"
 	"github.com/pkg/sftp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ssh"
+
+	"github.com/neel-03/configdrift/internal/config"
 )
 
 // generateTestKey creates a fresh 2048-bit RSA key pair each time.
@@ -355,7 +356,7 @@ func TestSSHAdapter_Fetch_ReuseConnection(t *testing.T) {
 	_, err = a.Fetch(context.Background())
 	require.NoError(t, err)
 
-	// same pointer — connection was reused, not re-dialled
+	// same pointer — connection was reused, not re-dialed
 	assert.Same(t, firstClient, a.client, "should reuse existing SSH connection")
 }
 
@@ -410,7 +411,7 @@ func TestSSHAdapter_Fetch_FileNotFound(t *testing.T) {
 }
 
 func TestSSHAdapter_Fetch_CancelledContext(t *testing.T) {
-	// if the context is cancelled before the dial completes, Fetch should
+	// if the context is canceled before the dial completes, Fetch should
 	// return immediately with a context error — not hang
 	keyData := generateTestKey(t)
 	keyFile := writeTempFile(t, "key_", keyData)
@@ -429,7 +430,7 @@ func TestSSHAdapter_Fetch_CancelledContext(t *testing.T) {
 	cancel() // cancel immediately
 
 	_, err := a.Fetch(ctx)
-	assert.Error(t, err, "fetch with cancelled context should return an error")
+	assert.Error(t, err, "fetch with canceled context should return an error")
 }
 
 func TestSSHAdapter_Fetch_UnknownHostKey(t *testing.T) {

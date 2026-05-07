@@ -10,9 +10,10 @@ import (
 	"time"
 
 	"github.com/moby/moby/client"
-	"github.com/neel-03/configdrift/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/neel-03/configdrift/internal/config"
 )
 
 // ── mock Docker client ────────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ func (m *mockDockerClient) CopyFromContainer(_ context.Context, _ string, srcPat
 		return nil, errors.New("no such file or directory")
 	}
 
-	// Docker returns a tar stream — match the real behaviour so extractFromTar is exercised
+	// Docker returns a tar stream — match the real behavior so extractFromTar is exercised
 	return buildTarStream(srcPath, data), nil
 }
 
@@ -159,7 +160,7 @@ func TestDockerAdapter_Fetch_EmptyFile(t *testing.T) {
 }
 
 func TestDockerAdapter_Fetch_CancelledContext(_ *testing.T) {
-	// a cancelled context should prevent the fetch from proceeding
+	// a canceled context should prevent the fetch from proceeding
 	// in real usage this happens when the watcher shuts down mid-cycle
 	mock := &mockDockerClient{
 		files: map[string][]byte{"/config.yaml": []byte("x: 1")},
@@ -173,10 +174,10 @@ func TestDockerAdapter_Fetch_CancelledContext(_ *testing.T) {
 	a := newMockDockerAdapter(cfg, mock)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // cancelled before Fetch runs
+	cancel() // canceled before Fetch runs
 
 	// the mock doesn't check context, but the real client would — this test
-	// validates that a cancelled context is passed through correctly
+	// validates that a canceled context is passed through correctly
 	// (the mock will still return data; real Docker client would error)
 	_, _ = a.Fetch(ctx) // just verify it doesn't panic
 }

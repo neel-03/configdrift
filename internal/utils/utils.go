@@ -58,7 +58,7 @@ func IndexToKey(i int) string {
 // ExpandPath resolves ~ in paths as os.ReadFile
 // won't expand the tilde automatically.
 func ExpandPath(path string) string {
-	if len(path) == 0 || path[0] != '~' {
+	if path == "" || path[0] != '~' {
 		return path
 	}
 	home, err := os.UserHomeDir()

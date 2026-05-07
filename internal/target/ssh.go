@@ -10,10 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/neel-03/configdrift/internal/config"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
+
+	"github.com/neel-03/configdrift/internal/config"
 )
 
 // SSHAdapter implements the Adapter interface for SSH targets.
@@ -124,7 +125,7 @@ func (a *SSHAdapter) ensureConnected(ctx context.Context) error {
 	}
 
 	if a.cfg.Timeout != "" {
-		if t, err := time.ParseDuration(a.cfg.Timeout); err == nil {
+		if t, pErr := time.ParseDuration(a.cfg.Timeout); pErr == nil {
 			sshConfig.Timeout = t
 		}
 	}

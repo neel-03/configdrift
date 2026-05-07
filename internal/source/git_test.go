@@ -230,7 +230,7 @@ func TestGitSource_Fetch(t *testing.T) {
 		}
 
 		// content from the mock repo (which might have been updated by previous subtests)
-		if string(data) == "" {
+		if len(data) == 0 {
 			t.Error("Expected non-empty content")
 		}
 	})
@@ -248,7 +248,7 @@ func TestGitSource_Fetch(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Fetch with token failed: %v", err)
 		}
-		if string(data) == "" {
+		if len(data) == 0 {
 			t.Error("Expected non-empty content")
 		}
 	})

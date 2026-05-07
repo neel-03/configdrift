@@ -10,10 +10,11 @@ import (
 	"path/filepath"
 
 	"github.com/moby/moby/client"
-	"github.com/neel-03/configdrift/internal/utils"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/neel-03/configdrift/internal/utils"
 )
 
 // -- Docker Utils --
@@ -93,7 +94,7 @@ func extractFromTar(reader io.Reader, filename string) ([]byte, error) {
 // -- K8s Utils --
 
 // buildClientset constructs a [kubernetes.Clientset] from the given kubeconfig path.
-// resolution order (mirrors kubectl behaviour):
+// resolution order (mirrors kubectl behavior):
 //  1. explicit kubeConfigPath arg (from targets.yaml kubeconfig field)
 //  2. KUBECONFIG environment variable
 //  3. ~/.kube/config (default kubeconfig location)

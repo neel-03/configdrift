@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/moby/moby/client"
+
 	"github.com/neel-03/configdrift/internal/config"
 )
 
@@ -64,7 +65,7 @@ func (a *DockerAdapter) Fetch(ctx context.Context) ([]byte, error) {
 	return extractFromTar(tarStream, filepath.Base(a.cfg.Path))
 }
 
-// ensureDockerClient lazily initialises the Docker SDK client on first use.
+// ensureDockerClient lazily initializes the Docker SDK client on first use.
 // we don't connect in NewDockerAdapter because the docker daemon might not be
 // running at startup.
 func (a *DockerAdapter) ensureDockerClient() error {
