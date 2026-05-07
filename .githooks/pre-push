@@ -11,17 +11,13 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}Running pre-push checks (Full Test Suite)...${NC}"
-
-# Check for Go
-if ! command -v go &> /dev/null; then
-    echo -e "${RED}Error: 'go' command not found.${NC}"
-    echo "Please install Go (1.26.0+) from https://go.dev/dl/"
-    exit 1
-fi
+echo -e "${YELLOW}Running pre-push checks (Full Test Suite) via Makefile...${NC}"
 
 # Run full tests
-go test ./...
+if ! make test; then
+    echo -e "${RED}Error: 'make test' failed.${NC}"
+    exit 1
+fi
 
 echo -e "${GREEN}All tests passed! Proceeding with push.${NC}"
 exit 0

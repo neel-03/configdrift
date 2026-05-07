@@ -1,6 +1,7 @@
 package source
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
@@ -14,7 +15,7 @@ func TestLocalSource(t *testing.T) {
 		tmpDir := t.TempDir()
 		path := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("key: value")
-		if err := os.WriteFile(path, content, 0644); err != nil {
+		if err := os.WriteFile(path, content, 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -23,7 +24,7 @@ func TestLocalSource(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Fetch failed: %v", err)
 		}
-		if string(data) != string(content) {
+		if !bytes.Equal(data, content) {
 			t.Errorf("expected %s, got %s", content, data)
 		}
 	})
@@ -41,7 +42,7 @@ func TestLocalSource(t *testing.T) {
 		path := filepath.Join(tmpDir, "config.yaml")
 
 		content1 := []byte("v1")
-		if err := os.WriteFile(path, content1, 0644); err != nil {
+		if err := os.WriteFile(path, content1, 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -55,7 +56,7 @@ func TestLocalSource(t *testing.T) {
 
 		// Update file and ensure ModTime changes
 		content2 := []byte("v2")
-		if err := os.WriteFile(path, content2, 0644); err != nil {
+		if err := os.WriteFile(path, content2, 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -95,7 +96,7 @@ func TestLocalSource(t *testing.T) {
 		tmpDir := t.TempDir()
 		path := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("concurrent data")
-		if err := os.WriteFile(path, content, 0644); err != nil {
+		if err := os.WriteFile(path, content, 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -108,7 +109,7 @@ func TestLocalSource(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				data, err := src.Fetch(context.Background())
-				if err != nil || string(data) != string(content) {
+				if err != nil || !bytes.Equal(data, content) {
 					t.Errorf("concurrent fetch failed or data mismatch")
 				}
 			}()
@@ -120,7 +121,7 @@ func TestLocalSource(t *testing.T) {
 		tmpDir := t.TempDir()
 		path := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("original")
-		if err := os.WriteFile(path, content, 0644); err != nil {
+		if err := os.WriteFile(path, content, 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -146,7 +147,7 @@ func TestLocalSource(t *testing.T) {
 	t.Run("EmptyFile", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		path := filepath.Join(tmpDir, "empty.yaml")
-		if err := os.WriteFile(path, []byte(""), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(""), 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -167,7 +168,7 @@ func TestLocalSource(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer func() {
-			_ = os.Chmod(path, 0755)
+			_ = os.Chmod(path, 0600)
 		}()
 
 		src := NewLocalSource(path)
@@ -180,7 +181,7 @@ func TestLocalSource(t *testing.T) {
 	t.Run("ReadError", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		path := filepath.Join(tmpDir, "directory_as_file")
-		if err := os.Mkdir(path, 0755); err != nil {
+		if err := os.Mkdir(path, 0750); err != nil {
 			t.Fatal(err)
 		}
 

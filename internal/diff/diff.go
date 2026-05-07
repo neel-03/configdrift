@@ -1,3 +1,4 @@
+// Package diff provides functionality to compare maps and generate diffs.
 package diff
 
 import "reflect"

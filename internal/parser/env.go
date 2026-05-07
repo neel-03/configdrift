@@ -1,9 +1,12 @@
+// Package parser implements different configuration parsing strategies.
 package parser
 
 import "github.com/neel-03/configdrift/internal/utils"
 
+// EnvParser handles parsing of .env files.
 type EnvParser struct{}
 
+// NewEnvParser creates a new EnvParser.
 func NewEnvParser() *EnvParser {
 	return &EnvParser{}
 }

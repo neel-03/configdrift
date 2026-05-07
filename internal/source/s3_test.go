@@ -12,7 +12,7 @@ import (
 )
 
 type mockS3Client struct {
-	GetObjectFunc func(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error)
+	GetObjectFunc func(_ context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error)
 }
 
 func (m *mockS3Client) GetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
@@ -44,7 +44,7 @@ func TestS3Source_Fetch(t *testing.T) {
 
 	t.Run("Successful Fetch", func(t *testing.T) {
 		mock := &mockS3Client{
-			GetObjectFunc: func(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
+			GetObjectFunc: func(_ context.Context, _ *s3.GetObjectInput, _ ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
 				return &s3.GetObjectOutput{
 					Body: io.NopCloser(bytes.NewReader([]byte(content))),
 					ETag: &etag,
@@ -75,7 +75,7 @@ func TestS3Source_Fetch(t *testing.T) {
 	t.Run("Cached Fetch (Not Modified)", func(t *testing.T) {
 		callCount := 0
 		mock := &mockS3Client{
-			GetObjectFunc: func(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
+			GetObjectFunc: func(_ context.Context, params *s3.GetObjectInput, _ ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
 				callCount++
 				if params.IfNoneMatch != nil && *params.IfNoneMatch == etag {
 					return nil, &smithy.GenericAPIError{
@@ -116,7 +116,7 @@ func TestS3Source_Fetch(t *testing.T) {
 
 	t.Run("S3 Error", func(t *testing.T) {
 		mock := &mockS3Client{
-			GetObjectFunc: func(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
+			GetObjectFunc: func(_ context.Context, _ *s3.GetObjectInput, _ ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
 				return nil, fmt.Errorf("s3 error")
 			},
 		}
@@ -134,7 +134,7 @@ func TestS3Source_Fetch(t *testing.T) {
 	})
 	t.Run("Body Read Error", func(t *testing.T) {
 		mock := &mockS3Client{
-			GetObjectFunc: func(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
+			GetObjectFunc: func(_ context.Context, _ *s3.GetObjectInput, _ ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
 				return &s3.GetObjectOutput{
 					Body: io.NopCloser(&errorReader{err: fmt.Errorf("read error")}),
 				}, nil
@@ -158,6 +158,6 @@ type errorReader struct {
 	err error
 }
 
-func (e *errorReader) Read(p []byte) (n int, err error) {
+func (e *errorReader) Read(_ []byte) (n int, err error) {
 	return 0, e.err
 }

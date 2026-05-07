@@ -6,9 +6,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/neel-03/configdrift/internal/config"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/neel-03/configdrift/internal/config"
 )
 
 // K8sAdapter implements the Adapter interface for Kubernetes ConfigMap targets.

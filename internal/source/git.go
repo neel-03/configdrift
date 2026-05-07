@@ -1,3 +1,4 @@
+// Package source provides interfaces and implementations for configuration sources.
 package source
 
 import (
@@ -118,7 +119,7 @@ func (gs *GitSource) ensureRepo() (*git.Repository, error) {
 
 // clone the repo if it doesn't exist locally
 func (gs *GitSource) clone() (*git.Repository, error) {
-	if err := os.MkdirAll(gs.dir, 0750); err != nil {
+	if err := os.MkdirAll(gs.dir, 0o750); err != nil {
 		return nil, fmt.Errorf("create repo dir: %w", err)
 	}
 

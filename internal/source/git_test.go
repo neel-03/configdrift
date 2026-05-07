@@ -28,7 +28,7 @@ func setupMockRepo(t *testing.T, branch, filename, content string) string {
 	}
 
 	fullPath := filepath.Join(dir, filename)
-	if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(fullPath, []byte(content), 0600); err != nil {
 		t.Fatalf("failed to write file: %v", err)
 	}
 
@@ -77,7 +77,7 @@ func updateMockRepo(t *testing.T, dir, filename, content string) {
 	}
 
 	fullPath := filepath.Join(dir, filename)
-	if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(fullPath, []byte(content), 0600); err != nil {
 		t.Fatalf("failed to write file: %v", err)
 	}
 
@@ -217,7 +217,7 @@ func TestGitSource_Fetch(t *testing.T) {
 	t.Run("Recovery from Corrupted Cache", func(t *testing.T) {
 		gs := newTestGitSource(t, repoPath, branch, filename)
 		// Manually create an empty directory to simulate a failed clone or corruption
-		if err := os.MkdirAll(gs.dir, 0755); err != nil {
+		if err := os.MkdirAll(gs.dir, 0750); err != nil {
 			t.Fatalf("Failed to create empty dir: %v", err)
 		}
 
@@ -230,7 +230,7 @@ func TestGitSource_Fetch(t *testing.T) {
 		}
 
 		// content from the mock repo (which might have been updated by previous subtests)
-		if string(data) == "" {
+		if len(data) == 0 {
 			t.Error("Expected non-empty content")
 		}
 	})
@@ -248,7 +248,7 @@ func TestGitSource_Fetch(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Fetch with token failed: %v", err)
 		}
-		if string(data) == "" {
+		if len(data) == 0 {
 			t.Error("Expected non-empty content")
 		}
 	})
