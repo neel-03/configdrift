@@ -17,8 +17,10 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "configdrift",
-	Short: "Detect config drift across your infrastructure",
+	Use:           "configdrift",
+	Short:         "Detect config drift across your infrastructure",
+	SilenceUsage:  true,
+	SilenceErrors: true,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		_ = godotenv.Load() // ignore error if .env doesn't exist
 		var err error

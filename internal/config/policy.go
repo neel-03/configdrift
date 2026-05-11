@@ -3,7 +3,6 @@ package config
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"time"
 
@@ -63,28 +62,8 @@ type TargetConfig struct {
 }
 
 // Load reads and validates a Policy from a YAML file.
-func Load(path string) (p *Policy, err error) {
-	root, err := os.OpenRoot(".")
-	if err != nil {
-		return nil, fmt.Errorf("failed to open root directory: %w", err)
-	}
-	defer func() {
-		if cerr := root.Close(); cerr != nil && err == nil {
-			err = fmt.Errorf("failed to close root directory: %w", cerr)
-		}
-	}()
-
-	file, err := root.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open policy file: %w", err)
-	}
-	defer func() {
-		if cerr := file.Close(); cerr != nil && err == nil {
-			err = fmt.Errorf("failed to close policy file: %w", cerr)
-		}
-	}()
-
-	data, err := io.ReadAll(file)
+func Load(path string) (*Policy, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read policy file: %w", err)
 	}

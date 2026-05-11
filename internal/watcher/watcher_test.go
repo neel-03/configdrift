@@ -62,7 +62,7 @@ func TestWatcher_RunCycle(t *testing.T) {
 		},
 	}
 
-	w := NewWatcher(cfg, src, adapters)
+	w := NewWatcher(cfg, src, adapters, nil)
 	results, err := w.RunCycle(context.Background())
 
 	assert.NoError(t, err)
@@ -77,7 +77,7 @@ func TestWatcher_FromPolicy_InvalidType(t *testing.T) {
 			Type: "invalid",
 		},
 	}
-	w, err := FromPolicy(context.Background(), cfg)
+	w, err := FromPolicy(context.Background(), cfg, nil)
 	assert.Error(t, err)
 	assert.Nil(t, w)
 	assert.Contains(t, err.Error(), "unsupported source type")

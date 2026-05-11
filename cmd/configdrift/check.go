@@ -25,7 +25,7 @@ var checkCmd = &cobra.Command{
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		w, err := watcher.FromPolicy(ctx, cfg)
+		w, err := watcher.FromPolicy(ctx, cfg, nil)
 		if err != nil {
 			return fmt.Errorf("failed to create watcher: %w", err)
 		}

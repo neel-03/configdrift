@@ -2,6 +2,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,6 +13,15 @@ import (
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
+
+// GenerateID returns a random 64-character hex string.
+func GenerateID() string {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "unknown"
+	}
+	return hex.EncodeToString(b)
+}
 
 // ParseYaml unmarshals raw YAML bytes into the provided target structure.
 func ParseYaml(data []byte, target interface{}) error {

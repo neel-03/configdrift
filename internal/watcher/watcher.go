@@ -20,13 +20,18 @@ type Watcher struct {
 	cfg      *config.Policy
 	source   source.Source
 	adapters []target.Adapter
+	log      *slog.Logger
 }
 
 // FromPolicy creates a new Watcher based on the provided policy.
 // It initializes all sources and adapters.
-func FromPolicy(ctx context.Context, cfg *config.Policy) (*Watcher, error) {
+func FromPolicy(ctx context.Context, cfg *config.Policy, log *slog.Logger) (*Watcher, error) {
 	var src source.Source
 	var err error
+
+	if log == nil {
+		log = slog.Default()
+	}
 
 	switch cfg.Canonical.Type {
 	case config.TypeLocal:
@@ -71,21 +76,25 @@ func FromPolicy(ctx context.Context, cfg *config.Policy) (*Watcher, error) {
 		adapters = append(adapters, adapter)
 	}
 
-	return NewWatcher(cfg, src, adapters), nil
+	return NewWatcher(cfg, src, adapters, log), nil
 }
 
 // NewWatcher creates a new Watcher based on the provided policy and initialized components.
-func NewWatcher(cfg *config.Policy, src source.Source, adapters []target.Adapter) *Watcher {
+func NewWatcher(cfg *config.Policy, src source.Source, adapters []target.Adapter, log *slog.Logger) *Watcher {
+	if log == nil {
+		log = slog.Default()
+	}
 	return &Watcher{
 		cfg:      cfg,
 		source:   src,
 		adapters: adapters,
+		log:      log,
 	}
 }
 
 // RunCycle performs a single drift detection cycle for all targets.
 func (w *Watcher) RunCycle(ctx context.Context) ([]diff.DriftResult, error) {
-	slog.Debug("Starting drift detection cycle")
+	w.log.Debug("Starting drift detection cycle")
 
 	// 1. fetch and parse canonical data
 	canonicalData, err := w.source.Fetch(ctx)
@@ -115,7 +124,7 @@ func (w *Watcher) RunCycle(ctx context.Context) ([]diff.DriftResult, error) {
 		g.Go(func() error {
 			res, err := w.checkTarget(gctx, targetCfg, a, canonicalFlattened)
 			if err != nil {
-				slog.Error("Failed to check target", "target", a.Name(), "error", err)
+				w.log.Error("Failed to check target", "target", a.Name(), "error", err)
 				return nil
 			}
 			resultsChan <- res
@@ -146,7 +155,7 @@ func (w *Watcher) checkTarget(ctx context.Context, targetCfg config.TargetConfig
 			ctx, cancel = context.WithTimeout(ctx, duration)
 			defer cancel()
 		} else {
-			slog.Warn("Ignoring invalid timeout duration", "target", targetCfg.Name, "timeout", targetCfg.Timeout, "error", err)
+			w.log.Warn("Ignoring invalid timeout duration", "target", targetCfg.Name, "timeout", targetCfg.Timeout, "error", err)
 		}
 	}
 
@@ -175,16 +184,16 @@ func (w *Watcher) Run(ctx context.Context) error {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	slog.Info("Starting watcher", "interval", w.cfg.Interval)
+	w.log.Info("Starting watcher", "interval", w.cfg.Interval)
 
 	for {
 		results, err := w.RunCycle(ctx)
 		if err != nil {
-			slog.Error("Cycle failed", "error", err)
+			w.log.Error("Cycle failed", "error", err)
 		} else {
 			for _, res := range results {
 				if res.IsDrifted {
-					slog.Warn("Drift detected", "target", res.TargetName)
+					w.log.Warn("Drift detected", "target", res.TargetName)
 					// TODO: Fan out to Alerters
 				}
 			}
@@ -192,7 +201,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 
 		select {
 		case <-ctx.Done():
-			slog.Info("Watcher stopping")
+			w.log.Info("Watcher stopping")
 			return ctx.Err()
 		case <-ticker.C:
 			continue
