@@ -19,25 +19,46 @@ permissions:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    name: CI (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
+          cache: true
 
-      - name: Setup environment
-        run: make setup
+      - name: Download dependencies
+        run: go mod tidy
 
       - name: Build
-        run: make build
+        run: go build ./...
 
       - name: Lint
+        if: runner.os == 'Linux'
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.12.1
+          version: v2.12.2
 
       - name: Test
-        run: make coverage
+        run: go test -coverprofile=coverage.out ./...
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always() && runner.os == 'Linux'
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 7
