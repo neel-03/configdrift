@@ -1,4 +1,4 @@
-name: Auto Merge
+name: Dependabot Auto Merge
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   auto-merge:
-    name: Enable auto-merge
+    name: dependabot-auto-merge
     runs-on: ubuntu-latest
 
     if: |
