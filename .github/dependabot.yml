@@ -7,6 +7,14 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "build(deps)"
+    ignore:
+      # never auto-bump the Go toolchain major or minor version
+      # only patch updates (e.g. 1.26.1 → 1.26.2) are allowed
+      # major/minor upgrades (e.g. 1.26 → 1.27 or 1.x → 2.x) must be intentional
+      - dependency-name: "go"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
 
   # github actions
   - package-ecosystem: "github-actions"
