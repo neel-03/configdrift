@@ -4,10 +4,14 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: "daily"
-  
+      interval: "weekly"
+    commit-message:
+      prefix: "build(deps)"
+
   # github actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    commit-message:
+      prefix: "ci(deps)"
