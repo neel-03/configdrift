@@ -56,7 +56,7 @@ jobs:
         run: go test ./... -coverprofile=coverage.out
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always() && runner.os == 'Linux'
         with:
           name: coverage-report
