@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.2
 	github.com/aws/smithy-go v1.28.2
 	github.com/go-git/go-git/v5 v5.19.2
-	github.com/go-playground/validator/v10 v10.30.4
+	github.com/go-playground/validator/v10 v10.30.5
 	github.com/joho/godotenv v1.5.1
 	github.com/moby/moby/client v0.6.0
 	github.com/pkg/sftp v1.13.11
