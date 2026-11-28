@@ -11,7 +11,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.6
 	github.com/joho/godotenv v1.5.1
 	github.com/moby/moby/client v0.6.3
-	github.com/pkg/sftp v1.13.12
+	github.com/pkg/sftp v1.13.13
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/crypto v0.59.0
